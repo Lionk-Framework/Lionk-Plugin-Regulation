@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lionk-Rpi-Component\src\Lionk.Rpi.TemperatureSensor.Razor\Lionk.Rpi.TemperatureSensor.Razor.csproj" />
+    <ProjectReference Include="..\..\Lionk-Rpi-Component\src\Lionk.Rpi.TemperatureSensor\Lionk.Rpi.TemperatureSensor.csproj" />
+    <ProjectReference Include="..\..\Lionk\src\Lib\Lionk.Core.Razor\Lionk.Core.Razor.csproj" />
+    <ProjectReference Include="..\..\Lionk\src\Lib\Lionk.Core\Lionk.Core.csproj" />
+  </ItemGroup>
+
+
+
+</Project>

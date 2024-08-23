@@ -1,0 +1,17 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+<Regulation.Accumulator.AccumulatorDesign TopTemp="TopTemp" MiddleTemp="MiddleTemp" BottomTemp="BottomTemp" MaxTemp="MaxTemp" MinTemp="MinTemp" />
+<MudTextField @bind-Value="TopTemp" Label="Top temperature" />
+<MudTextField @bind-Value="MiddleTemp" Label="Middle temperature" />
+<MudTextField @bind-Value="BottomTemp" Label="Bottom temperature" />
+
+@code {
+    public double TopTemp { get; set; } = 100;
+    public double MiddleTemp { get; set; } = 50;
+    public double BottomTemp { get; set; } = 0;
+    public double MaxTemp { get; set; } = 100;
+    public double MinTemp { get; set; } = 0;
+}
+
