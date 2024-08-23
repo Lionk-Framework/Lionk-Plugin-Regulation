@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Lionk-rpi-components\src\Lionk.Rpi.TemperatureSensor\Lionk.Rpi.TemperatureSensor.csproj" />
+    <ProjectReference Include="..\..\..\Lionk\src\Lib\Lionk.Core\Lionk.Core.csproj" />
+  </ItemGroup>
+
 </Project>

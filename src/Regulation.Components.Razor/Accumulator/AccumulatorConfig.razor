@@ -1,0 +1,69 @@
+﻿@using Lionk.Core.Component
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.TemperatureSensor
+@using Regulation.Components
+@using MudBlazor
+@inject IComponentService ComponentService
+@attribute [ViewOf("Accumulator Configuration", typeof(Accumulator), typeof(AccumulatorConfig), ViewContext.Configuration)]
+
+<MudGrid>
+    <MudItem xs="12" sm="4">
+        <MudSelect @bind-Value="Component.TopSensorId" Label="Top Sensor">
+            @foreach (var sensor in _sensors)
+            {
+                <MudSelectItem Value="@sensor.Id">@sensor.InstanceName</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+
+    <MudItem xs="12" sm="4">
+        <MudSelect @bind-Value="Component.MiddleSensorId" Label="Middle Sensor">
+            @foreach (var sensor in _sensors)
+            {
+                <MudSelectItem Value="@sensor.Id">@sensor.InstanceName</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+
+    <MudItem xs="12" sm="4">
+        <MudSelect @bind-Value="Component.BottomSensorId" Label="Bottom Sensor">
+            @foreach (var sensor in _sensors)
+            {
+                <MudSelectItem Value="@sensor.Id">@sensor.InstanceName</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-value="Component.MinTemp" Label="Min Temperature" T="double" />
+    </MudItem>
+
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-value="Component.MaxTemp" Label="Max Temperature" T="double"/>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public Accumulator Component { get; set; } = null!;
+    private List<BaseTemperatureSensor> _sensors { get; set; } = new();
+    private ComponentContainer TopSensorContainer = null!;
+    private ComponentContainer MiddleSensorContainer = null!;
+    private ComponentContainer BottomSensorContainer = null!;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        GetElements();
+    }
+
+    private void GetElements()
+    {
+        TopSensorContainer = new ComponentContainer(ComponentService, Component.TopSensorId);
+        MiddleSensorContainer = new ComponentContainer(ComponentService, Component.MiddleSensorId);
+        BottomSensorContainer = new ComponentContainer(ComponentService, Component.BottomSensorId);
+
+        _sensors = ComponentService.GetInstancesOfType<BaseTemperatureSensor>().ToList();
+        if (_sensors is null || !_sensors.Any()) return;
+    }
+}

@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lionk.Rpi.TemperatureSensor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Regulation.Components.Razor", "Regulation.Components.Razor\Regulation.Components.Razor.csproj", "{2E197BB9-5B96-4C17-AA0A-018EFF0842E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Regulation.Components", "Regulation.Components\Regulation.Components.csproj", "{D7509FF5-E196-47BE-A358-C916978971BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Regulation.Components", "Regulation.Components\Regulation.Components.csproj", "{D7509FF5-E196-47BE-A358-C916978971BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

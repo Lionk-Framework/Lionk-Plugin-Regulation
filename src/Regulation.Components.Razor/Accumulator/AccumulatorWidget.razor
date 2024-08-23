@@ -1,0 +1,24 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.TemperatureSensor
+@namespace Regulation.Components
+@attribute [ViewOf("Accumulator", typeof(Accumulator), typeof(AccumulatorWidget), ViewContext.Widget)]
+
+<AccumulatorDesign/>
+
+@code {
+    [Parameter] public Accumulator Component { get; set; } = null!;
+
+    private ComponentContainer TopSensorContainer = null!;
+    private ComponentContainer MiddleSensorContainer = null!;
+    private ComponentContainer BottomSensorContainer = null!;
+
+    protected override void OnInitialized()
+    {
+        TopSensorContainer = new ComponentContainer(ComponentService, Component.TopSensorId);
+        MiddleSensorContainer = new ComponentContainer(ComponentService, Component.MiddleSensorId);
+        BottomSensorContainer = new ComponentContainer(ComponentService, Component.BottomSensorId);
+    }
+}
