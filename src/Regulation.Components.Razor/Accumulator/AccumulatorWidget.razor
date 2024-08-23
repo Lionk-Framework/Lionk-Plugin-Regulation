@@ -3,10 +3,74 @@
 @using Lionk.Core.View
 @using Lionk.Core.Component
 @using Lionk.TemperatureSensor
+@using MudBlazor
 @namespace Regulation.Components
 @attribute [ViewOf("Accumulator", typeof(Accumulator), typeof(AccumulatorWidget), ViewContext.Widget)]
 
-<AccumulatorDesign/>
+<svg width="30mm"
+     height="60mm"
+     viewBox="0 0 30 60"
+     version="1.1"
+     id="svg1"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:svg="http://www.w3.org/2000/svg">
+    <defs id="defs1">
+        <linearGradient id="linearGradient10">
+            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(_topTemp);"
+                  offset="0.12891345"
+                  id="stop11" />
+            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(_middleTemp);"
+                  offset="0.50644565"
+                  id="stop13" />
+            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(_bottomTemp);"
+                  offset="0.88397789"
+                  id="stop12" />
+        </linearGradient>
+        <linearGradient xlink:href="#linearGradient10"
+                        id="linearGradient12"
+                        x1="80.072289"
+                        y1="45.643948"
+                        x2="80.072289"
+                        y2="121.59145"
+                        gradientUnits="userSpaceOnUse" />
+    </defs>
+    <g id="layer1">
+        <path style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:1.43518;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+              id="rect1-4"
+              width="41.745998"
+              height="75.193062"
+              x="58.846737"
+              y="45.769688"
+              rx="10"
+              transform="matrix(0.69467547,0,0,0.78280421,-40.443338,-35.143956)"
+              d="m 68.846737,45.769688 h 21.745998 c 5.54,0 10.000005,4.46 10.000005,10 v 55.193062 c 0,5.54 -4.460005,10 -10.000005,10 H 68.846737 c -5.54,0 -10,-4.46 -10,-10 V 55.769688 c 0,-5.54 4.46,-10 10,-10 z" />
+        <path style="fill:url(#linearGradient12);fill-opacity:1;stroke:#000000;stroke-width:1.43517518;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;opacity:1"
+              id="rect1"
+              width="41.745998"
+              height="75.193062"
+              x="58.846737"
+              y="45.769688"
+              rx="10"
+              transform="matrix(0.69467547,0,0,0.78280422,-40.255151,-35.015492)"
+              d="m 68.846737,45.769688 h 21.745998 c 5.54,0 10.000005,4.46 10.000005,10 v 55.193062 c 0,5.54 -4.460005,10 -10.000005,10 H 68.846737 c -5.54,0 -10,-4.46 -10,-10 V 55.769688 c 0,-5.54 4.46,-10 10,-10 z" />
+    </g>
+</svg>
+<div style="
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding-top: 45px;
+    padding-bottom: 25px;
+">
+    <MudText Typo="Typo.body2">@_topTempString</MudText>
+    <MudText Typo="Typo.body2">@_middleTempString</MudText>
+    <MudText Typo="Typo.body2">@_bottomTempString</MudText>
+</div>
 
 @code {
     [Parameter] public Accumulator Component { get; set; } = null!;
@@ -15,10 +79,40 @@
     private ComponentContainer MiddleSensorContainer = null!;
     private ComponentContainer BottomSensorContainer = null!;
 
+    private BaseTemperatureSensor? TopSensor = null!;
+    private BaseTemperatureSensor? MiddleSensor = null!;
+    private BaseTemperatureSensor? BottomSensor = null!;
+
+    private double _topTemp => TopSensor?.GetTemperature() ?? double.NaN;
+    private double _middleTemp => MiddleSensor?.GetTemperature() ?? double.NaN;
+    private double _bottomTemp => BottomSensor?.GetTemperature() ?? double.NaN;
+
+    private string _topTempString => _topTemp + TopSensor?.GetUnit() ?? string.Empty;
+    private string _middleTempString => _middleTemp + MiddleSensor?.GetUnit() ?? string.Empty;
+    private string _bottomTempString => _bottomTemp + BottomSensor?.GetUnit() ?? string.Empty;
+
+
     protected override void OnInitialized()
     {
         TopSensorContainer = new ComponentContainer(ComponentService, Component.TopSensorId);
         MiddleSensorContainer = new ComponentContainer(ComponentService, Component.MiddleSensorId);
         BottomSensorContainer = new ComponentContainer(ComponentService, Component.BottomSensorId);
+
+        TopSensor = (BaseTemperatureSensor?)TopSensorContainer.Component;
+        MiddleSensor = (BaseTemperatureSensor?)MiddleSensorContainer.Component;
+        BottomSensor = (BaseTemperatureSensor?)BottomSensorContainer.Component;
+
+        if (TopSensor is not null && MiddleSensor is not null && BottomSensor is not null)
+        {
+            TopSensor.NewValueAvailable += (sender, args) => InvokeAsync(StateHasChanged);
+            MiddleSensor.NewValueAvailable += (sender, args) => InvokeAsync(StateHasChanged);
+            BottomSensor.NewValueAvailable += (sender, args) => InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private double opacityFromTemp(double temp)
+    {
+        
+        return (temp - Component.MinTemp) / (Component.MaxTemp - Component.MinTemp);
     }
 }
