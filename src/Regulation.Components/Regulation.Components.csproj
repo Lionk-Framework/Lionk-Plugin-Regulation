@@ -7,8 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Lionk-rpi-components\src\Lionk.Rpi.TemperatureSensor\Lionk.Rpi.TemperatureSensor.csproj" />
-    <ProjectReference Include="..\..\..\Lionk\src\Lib\Lionk.Core\Lionk.Core.csproj" />
     <ProjectReference Include="..\..\Lionk-Rpi-Component\src\Lionk.Rpi.Gpio\Lionk.Rpi.Gpio.csproj" />
   </ItemGroup>
 

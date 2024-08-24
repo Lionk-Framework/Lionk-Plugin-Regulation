@@ -1,0 +1,26 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.Rpi.Gpio
+@using MudBlazor
+@namespace Regulation.Components
+@attribute [ViewOf("Pump", typeof(Pump), typeof(PumpWidget), ViewContext.Widget)]
+@if (Component.PwmGpio is null)
+{
+    <MudBadge Color="Color.Warning">PwmGpio not set</MudBadge>
+} else
+{
+    <MudText Typo="Typo.h6">Speed: @_speed %</MudText>
+}
+@code {
+    [Parameter] public Pump Component { get; set; } = null!;
+
+    private double _speed => Math.Round(Component.Speed, 2) * 100;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        Component.PwmGpio = ComponentService.GetInstanceByID(Component.PwmGpioId) as StandardPwmGpio;
+    }
+}

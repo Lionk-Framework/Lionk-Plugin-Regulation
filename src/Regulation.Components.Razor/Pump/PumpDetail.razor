@@ -1,0 +1,47 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.Rpi.Gpio
+@using Lionk.Rpi.Gpio.View
+@using MudBlazor
+@namespace Regulation.Components
+@attribute [ViewOf("Pump Detail", typeof(Pump), typeof(PumpDetail), ViewContext.Detail)]
+<MudGrid>
+    <MudItem xs="6">
+        <MudText Typo="Typo.h6">Pump name:</MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText Typo="Typo.h6">@Component.InstanceName</MudText>
+    </MudItem>
+    <MudItem xs="12">
+        @if (Component.PwmGpio is not null)
+        {
+            <MudText Typo="Typo.h6"> Gpio name: @Component.PwmGpio.InstanceName </MudText>
+            <MudText Typo="Typo.h6"> Gpio number: @Component.PwmGpio.Pin.ToString()</MudText>
+            <PwmSignalDisplayer DutyCycle="@Component.PwmGpio.DutyCycle" Resolution="1000" />
+        }
+        else
+        {
+            <MudBadge Color="Color.Warning">PwmGpio not set</MudBadge>
+        }
+    </MudItem>
+
+    <MudItem xs="6">
+        <MudText Typo="Typo.h6">Speed:</MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText Typo="Typo.h6">@_speed %</MudText>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public Pump Component { get; set; } = null!;
+    private double _speed => Math.Round(Component.Speed, 2) * 100;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        Component.PwmGpio = ComponentService.GetInstanceByID(Component.PwmGpioId) as StandardPwmGpio;
+    }
+}
