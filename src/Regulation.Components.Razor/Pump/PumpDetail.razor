@@ -7,33 +7,15 @@
 @using MudBlazor
 @namespace Regulation.Components
 @attribute [ViewOf("Pump Detail", typeof(Pump), typeof(PumpDetail), ViewContext.Detail)]
-<MudGrid Style="width:100%"> 
-    <MudItem xs="6" Style="width:50%">
-        <MudText Typo="Typo.body1">Pump name:</MudText>
-    </MudItem>
-    <MudItem xs="6">
-        <MudText Typo="Typo.body1">@Component.InstanceName</MudText>
-    </MudItem>
-    <MudItem xs="12">
-        @if (Component.PwmGpio is not null)
-        {
-            <MudText Typo="Typo.body1" Style="width:50%"> Gpio name: @Component.PwmGpio.InstanceName </MudText>
-            <MudText Typo="Typo.body1" Style="width:50%"> Gpio number: @Component.PwmGpio.Pin.ToString()</MudText>
-            <PwmSignalDisplayer DutyCycle="@Component.PwmGpio.DutyCycle" Resolution="1000" />
-        }
-        else
-        {
-            <MudBadge Color="Color.Warning">PwmGpio not set</MudBadge>
-        }
-    </MudItem>
 
-    <MudItem xs="6" Style="width:50%">
-        <MudText Typo="Typo.body1">Speed:</MudText>
-    </MudItem>
-    <MudItem xs="6">
-        <MudText Typo="Typo.body1">@_speed %</MudText>
-    </MudItem>
-</MudGrid>
+<MudText Typo="Typo.body1">Pump name: @Component.InstanceName</MudText>
+<MudText Typo="Typo.body1">Speed: @_speed</MudText>
+@if (Component.PwmGpio is not null)
+{
+    <StandardPwmGpioWidget Component="Component.PwmGpio" />
+}
+
+
 
 @code {
     [Parameter] public Pump Component { get; set; } = null!;

@@ -16,7 +16,7 @@
 @code {
     [Parameter] public Pump Component { get; set; } = null!;
 
-    private double _speed => Math.Round(Component.Speed, 2) * 100;
+    private int _speed => (int)(Math.Round(Component.Speed * 100, 2));
 
     protected override void OnInitialized()
     {

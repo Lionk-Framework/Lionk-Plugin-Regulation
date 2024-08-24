@@ -10,7 +10,7 @@
 <MudSlider T="double" @bind-Value="@Component.Speed" Max="1" Min="0" Step="0.01" />
 <div class="d-flex flex-column align-center">
 
-    <MudText Class="pb-4">@(Component.Speed * 100)%</MudText>
+    <MudText Class="pb-4">@((int)Math.Round(Component.Speed * 100, 2))%</MudText>
 
 </div>
 
