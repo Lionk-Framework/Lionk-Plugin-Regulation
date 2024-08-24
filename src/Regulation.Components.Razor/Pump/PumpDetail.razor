@@ -42,6 +42,6 @@
     protected override void OnInitialized()
     {
         if (Component is null) throw new ArgumentException("Component must be set");
-        Component.PwmGpio = ComponentService.GetInstanceByID(Component.PwmGpioId) as StandardPwmGpio;
+        Component.PwmGpio = ComponentService.GetInstanceById(Component.PwmGpioId) as StandardPwmGpio;
     }
 }
