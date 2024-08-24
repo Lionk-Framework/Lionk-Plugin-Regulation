@@ -7,10 +7,10 @@
 @namespace Regulation.Components
 @attribute [ViewOf("Pump Configuration", typeof(Pump), typeof(PumpConfig), ViewContext.Configuration)]
 
-<MudSelect Label="PwmGpio" @bind-Value="Component.PwmGpioId" Variant="Variant.Filled">
+<MudSelect Label="PwmGpio" @bind-Value="Component.PwmGpio" Variant="Variant.Filled">
     @foreach (var gpio in ComponentService.GetInstancesOfType<StandardPwmGpio>())
     {
-        <MudSelectItem Value="@gpio.Id">
+        <MudSelectItem Value="@gpio">
             @gpio.InstanceName
         </MudSelectItem>
     }
