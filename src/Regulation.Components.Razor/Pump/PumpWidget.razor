@@ -22,5 +22,7 @@
     {
         if (Component is null) throw new ArgumentException("Component must be set");
         Component.PwmGpio = ComponentService.GetInstanceById(Component.PwmGpioId) as StandardPwmGpio;
+        Component.SpeedChanged += (sender, args) => InvokeAsync(StateHasChanged);
+        Component.PropertyChanged += (sender, args) => InvokeAsync(StateHasChanged);
     }
 }

@@ -13,9 +13,22 @@ namespace Regulation.Components;
 [NamedElement("Pump", "Pump with inversed PWM control")]
 public class Pump : BaseExecutableComponent
 {
+    #region Public Events
+
+    /// <summary>
+    /// Event that is raised when the speed of the pump is changed.
+    /// </summary>
+    public event EventHandler? SpeedChanged;
+
+    #endregion Public Events
+
     #region Private Fields
 
     private Guid _pwmPinId;
+
+    private double _speed;
+
+    private StandardPwmGpio? _pwmGpio;
 
     #endregion Private Fields
 
@@ -36,7 +49,16 @@ public class Pump : BaseExecutableComponent
     /// Gets or sets the PWM GPIO.
     /// </summary>
     [JsonIgnore]
-    public StandardPwmGpio? PwmGpio { get; set; }
+    public StandardPwmGpio? PwmGpio
+    {
+        get => _pwmGpio;
+        set
+        {
+            if (_pwmGpio == value) return;
+            PwmGpioId = value?.Id ?? Guid.Empty;
+            _pwmGpio = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the PWM pin id.
@@ -51,7 +73,15 @@ public class Pump : BaseExecutableComponent
     /// Gets or sets the speed of the pump.
     /// </summary>
     [JsonIgnore]
-    public double Speed { get; set; }
+    public double Speed
+    {
+        get => Math.Round(_speed, 2);
+        set
+        {
+            _speed = value;
+            SpeedChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
     #endregion Public Properties
 

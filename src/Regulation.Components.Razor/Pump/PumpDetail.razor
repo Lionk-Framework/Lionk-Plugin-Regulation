@@ -7,18 +7,18 @@
 @using MudBlazor
 @namespace Regulation.Components
 @attribute [ViewOf("Pump Detail", typeof(Pump), typeof(PumpDetail), ViewContext.Detail)]
-<MudGrid>
-    <MudItem xs="6">
-        <MudText Typo="Typo.h6">Pump name:</MudText>
+<MudGrid Style="width:100%"> 
+    <MudItem xs="6" Style="width:50%">
+        <MudText Typo="Typo.body1">Pump name:</MudText>
     </MudItem>
     <MudItem xs="6">
-        <MudText Typo="Typo.h6">@Component.InstanceName</MudText>
+        <MudText Typo="Typo.body1">@Component.InstanceName</MudText>
     </MudItem>
     <MudItem xs="12">
         @if (Component.PwmGpio is not null)
         {
-            <MudText Typo="Typo.h6"> Gpio name: @Component.PwmGpio.InstanceName </MudText>
-            <MudText Typo="Typo.h6"> Gpio number: @Component.PwmGpio.Pin.ToString()</MudText>
+            <MudText Typo="Typo.body1" Style="width:50%"> Gpio name: @Component.PwmGpio.InstanceName </MudText>
+            <MudText Typo="Typo.body1" Style="width:50%"> Gpio number: @Component.PwmGpio.Pin.ToString()</MudText>
             <PwmSignalDisplayer DutyCycle="@Component.PwmGpio.DutyCycle" Resolution="1000" />
         }
         else
@@ -27,11 +27,11 @@
         }
     </MudItem>
 
-    <MudItem xs="6">
-        <MudText Typo="Typo.h6">Speed:</MudText>
+    <MudItem xs="6" Style="width:50%">
+        <MudText Typo="Typo.body1">Speed:</MudText>
     </MudItem>
     <MudItem xs="6">
-        <MudText Typo="Typo.h6">@_speed %</MudText>
+        <MudText Typo="Typo.body1">@_speed %</MudText>
     </MudItem>
 </MudGrid>
 

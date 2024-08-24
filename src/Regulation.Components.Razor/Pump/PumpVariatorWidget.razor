@@ -1,0 +1,19 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.Rpi.Gpio
+@using MudBlazor
+@namespace Regulation.Components
+@attribute [ViewOf("Pump Variator", typeof(Pump), typeof(PumpVariatorWidget), ViewContext.Widget)]
+
+<MudSlider T="double" @bind-Value="@Component.Speed" Max="1" Min="0" Step="0.01" />
+<div class="d-flex flex-column align-center">
+
+    <MudText Class="pb-4">@(Component.Speed * 100)%</MudText>
+
+</div>
+
+@code {
+    [Parameter] public Pump Component { get; set; } = null!;
+}
