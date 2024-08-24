@@ -1,3 +1,9 @@
 [submodule "Lionk"]
 	path = Lionk
 	url = git@github.com:Lionk-Framework/Lionk.git
+[submodule "git@github.com:Lionk-Framework/Lionk-rpi-components.git"]
+	path = git@github.com:Lionk-Framework/Lionk-rpi-components.git
+	url = Lionk-Rpi-Component
+[submodule "Lionk-Rpi-Component"]
+	path = Lionk-Rpi-Component
+	url = git@github.com:Lionk-Framework/Lionk-rpi-components.git
