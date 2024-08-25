@@ -1,6 +1,7 @@
 ﻿// Copyright © 2024 Lionk Project
 
 using System.Device.Gpio;
+using Lionk.Core;
 using Lionk.Core.Component;
 using Lionk.Rpi.Gpio;
 
@@ -9,11 +10,14 @@ namespace Regulation.Components;
 /// <summary>
 /// This class represents a three way valve.
 /// </summary>
+[NamedElement("Three Way Valve", "This component represents a three way valve.")]
 public class ThreeWayValve : BaseExecutableComponent
 {
     #region Private Fields
 
+    private readonly object _locker = new();
     private DateTime _startActionTime = DateTime.MinValue;
+    private bool _isBusy = false;
 
     #endregion Private Fields
 
@@ -35,9 +39,14 @@ public class ThreeWayValve : BaseExecutableComponent
     public int OpeningDuration { get; set; } = 0;
 
     /// <summary>
-    /// Gets or sets the state of the valve.
+    /// Gets or sets the order to execute.
     /// </summary>
-    public VavleState State { get; set; } = VavleState.Undefined;
+    public ValveOrder ValveOrder { get; set; } = ValveOrder.Stop;
+
+    /// <summary>
+    /// Gets the state of the valve.
+    /// </summary>
+    public VavleState State { get; private set; } = VavleState.Undefined;
 
     /// <summary>
     /// Gets a value indicating whether the component is initialized.
@@ -52,35 +61,69 @@ public class ThreeWayValve : BaseExecutableComponent
     /// <summary>
     /// Gets a value indicating whether the component can be executed.
     /// </summary>
-    public override bool CanExecute => OpeningPin is not null && ClosingPin is not null && IsInitialized;
+    public override bool CanExecute
+        => OpeningPin is not null
+        && ClosingPin is not null
+        && OpeningPin.CanExecute
+        && ClosingPin.CanExecute;
 
     #endregion Public Properties
 
-    private void Process(VavleOrder order)
+    /// <inheritdoc/>
+    protected override void OnExecute(CancellationToken cancellationToken)
     {
-        switch (order)
+        base.OnExecute(cancellationToken);
+        Process(ValveOrder);
+    }
+
+    /// <inheritdoc/>
+    public override void Abort()
+    {
+        base.Abort();
+        Process(ValveOrder.Stop);
+    }
+
+    private void Process(ValveOrder order)
+    {
+        if (_isBusy) return;
+        lock (_locker)
         {
-            case VavleOrder.Initialize:
-                InitializeProcess();
-                break;
-
-            case VavleOrder.Open:
-                OpenProcess();
-                break;
-
-            case VavleOrder.Close:
-                CloseProcess();
-                break;
-
-            case VavleOrder.Stop:
-                StopProcess();
-                break;
+            _isBusy = true;
         }
+
+        var thread = new Thread(() =>
+        {
+            switch (order)
+            {
+                case ValveOrder.Initialize:
+                    InitializeProcess();
+                    break;
+
+                case ValveOrder.Open:
+                    OpenProcess();
+                    break;
+
+                case ValveOrder.Close:
+                    CloseProcess();
+                    break;
+
+                case ValveOrder.Stop:
+                    StopProcess();
+                    break;
+            }
+
+            lock (_locker)
+            {
+                _isBusy = false;
+            }
+        });
+        thread.Start();
     }
 
     private void OpenProcess()
     {
         if (OpeningPin is null || ClosingPin is null) return;
+        if (!IsInitialized) InitializeProcess();
         _startActionTime = DateTime.UtcNow;
         while (State is not VavleState.Open)
         {
@@ -88,7 +131,7 @@ public class ThreeWayValve : BaseExecutableComponent
             {
                 case VavleState.Open:
                     RemainingTime = TimeSpan.Zero;
-                    return;
+                    break;
 
                 case VavleState.Opening:
                     OpeningPin.PinValue = PinValue.High;
@@ -104,13 +147,11 @@ public class ThreeWayValve : BaseExecutableComponent
                         RemainingTime = TimeSpan.FromSeconds(OpeningDuration) - (DateTime.UtcNow - _startActionTime);
                     }
 
-                    return;
+                    break;
 
-                case VavleState.Closing:
-                case VavleState.Closed:
-                case VavleState.Undefined:
+                default:
                     State = VavleState.Opening;
-                    return;
+                    break;
             }
 
             OpeningPin.Execute();
@@ -121,6 +162,7 @@ public class ThreeWayValve : BaseExecutableComponent
     private void CloseProcess()
     {
         if (OpeningPin is null || ClosingPin is null) return;
+        if (!IsInitialized) InitializeProcess();
         _startActionTime = DateTime.UtcNow;
         while (State is not VavleState.Closed)
         {
@@ -128,7 +170,7 @@ public class ThreeWayValve : BaseExecutableComponent
             {
                 case VavleState.Closed:
                     RemainingTime = TimeSpan.Zero;
-                    return;
+                    break;
 
                 case VavleState.Closing:
                     OpeningPin.PinValue = PinValue.Low;
@@ -144,13 +186,11 @@ public class ThreeWayValve : BaseExecutableComponent
                         RemainingTime = TimeSpan.FromSeconds(OpeningDuration) - (DateTime.UtcNow - _startActionTime);
                     }
 
-                    return;
+                    break;
 
-                case VavleState.Opening:
-                case VavleState.Open:
-                case VavleState.Undefined:
-                    State = VavleState.Closing;
-                    return;
+                default:
+                    State = VavleState.Opening;
+                    break;
             }
 
             OpeningPin.Execute();
@@ -179,7 +219,39 @@ public class ThreeWayValve : BaseExecutableComponent
 
         int openingDurationSave = OpeningDuration;
         OpeningDuration += 5;
-        OpenProcess();
+        while (State is not VavleState.Initialised)
+        {
+            switch (State)
+            {
+                case VavleState.Initialised:
+                    RemainingTime = TimeSpan.Zero;
+                    break;
+
+                case VavleState.Initialising:
+                    OpeningPin.PinValue = PinValue.High;
+                    ClosingPin.PinValue = PinValue.Low;
+                    if (DateTime.UtcNow - _startActionTime >= TimeSpan.FromSeconds(OpeningDuration))
+                    {
+                        State = VavleState.Initialised;
+                        RemainingTime = TimeSpan.Zero;
+                        OpeningPin.PinValue = PinValue.Low;
+                    }
+                    else
+                    {
+                        RemainingTime = TimeSpan.FromSeconds(OpeningDuration) - (DateTime.UtcNow - _startActionTime);
+                    }
+
+                    break;
+
+                default:
+                    State = VavleState.Opening;
+                    break;
+            }
+
+            OpeningPin.Execute();
+            ClosingPin.Execute();
+        }
+
         OpeningDuration = openingDurationSave;
         IsInitialized = true;
     }

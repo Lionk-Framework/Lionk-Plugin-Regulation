@@ -18,6 +18,11 @@ public enum VavleState
     Open,
 
     /// <summary>
+    /// The valve is initialised.
+    /// </summary>
+    Initialised,
+
+    /// <summary>
     /// The valve is opening.
     /// </summary>
     Opening,
@@ -26,6 +31,11 @@ public enum VavleState
     /// The valve is closing.
     /// </summary>
     Closing,
+
+    /// <summary>
+    /// The valve is initialising.
+    /// </summary>
+    Initialising,
 
     /// <summary>
     /// The state of the valve is undefined.

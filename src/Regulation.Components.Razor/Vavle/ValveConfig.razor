@@ -1,0 +1,50 @@
+﻿@using Lionk.Core.View
+@using Lionk.Core.Component
+@using MudBlazor
+@using System.ComponentModel
+@using Lionk.Rpi.Gpio
+@inject IComponentService ComponentService
+@namespace Regulation.Components
+@attribute [ViewOf("Vavle configuration", typeof(ThreeWayValve), typeof(ValveConfig), ViewContext.Configuration)]
+
+<MudSelect Label="Open valve GPIO" @bind-Value="Component.OpeningPin" Variant="Variant.Filled" >
+    @foreach (var gpio in _gpios)
+    {
+        <MudSelectItem Value="@gpio">@gpio.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+<MudSelect Label="Open valve GPIO" @bind-Value="Component.ClosingPin" Variant="Variant.Filled" >
+    @foreach (var gpio in _gpios)
+    {
+        <MudSelectItem Value="@gpio">@gpio.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+<MudTextField Label="Opening time" T="int" @bind-Value="Component.OpeningDuration" Variant="Variant.Filled"  />
+
+<MudSelect Label="Order" @bind-Value="Component.ValveOrder" Variant="Variant.Filled" >
+    @foreach (var order in Enum.GetValues(typeof(ValveOrder)).Cast<ValveOrder>())
+    {
+        <MudSelectItem Value="@order">@order</MudSelectItem>
+    }
+</MudSelect>
+
+
+@code {
+    [Parameter] public ThreeWayValve Component { get; set; } = null!;
+
+    private List<OutputGpio> _gpios => ComponentService.GetInstancesOfType<OutputGpio>()
+    .Where(g => g.Id != (Component.OpeningPin?.Id ?? Guid.Empty) || g.Id != (Component.ClosingPin?.Id ?? Guid.Empty)).ToList();
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        Component.PropertyChanged += OnPropertyChange;
+    }
+
+    private void OnPropertyChange(object? sender, PropertyChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+}

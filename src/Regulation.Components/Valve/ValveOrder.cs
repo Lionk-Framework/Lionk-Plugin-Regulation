@@ -5,7 +5,7 @@ namespace Regulation.Components;
 /// <summary>
 /// Enum used to order a valve.
 /// </summary>
-public enum VavleOrder
+public enum ValveOrder
 {
     /// <summary>
     /// The valve is ordered to initialize.
