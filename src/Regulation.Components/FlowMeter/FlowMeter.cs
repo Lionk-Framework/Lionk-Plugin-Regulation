@@ -17,8 +17,10 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
 {
     private const int NbMeasuresToComputeFlow = 10;
     private const string Unit = "l";
+    private const int _raisedEventTolerance = 500; // Tolerance to avoid multiple events in ms
     private Guid _gpioId;
     private BaseGpioController? _controller;
+    private DateTime _lastMeasureTime = DateTime.MinValue;
 
     /// <summary>
     /// Gets or sets the initial value.
@@ -78,6 +80,9 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
 
     private void OnPinValueChanged(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
     {
+        if (_lastMeasureTime.AddMilliseconds(_raisedEventTolerance) > DateTime.UtcNow) return;
+        _lastMeasureTime = DateTime.UtcNow;
+        _lastMeasureTime = DateTime.UtcNow;
         CurrentValue++;
         Measure();
     }
@@ -91,7 +96,6 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
         Measures[0] = new Measure<int>("Valeur", now, Unit, CurrentValue);
         NewValueAvailable?.Invoke(this, new MeasureEventArgs<int>(Measures));
 
-        // Ajouter la nouvelle mesure à la file d'attente
         _lastMeasurements.Enqueue((now, CurrentValue));
         if (_lastMeasurements.Count > NbMeasuresToComputeFlow)
         {
@@ -108,8 +112,6 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
                 int volumeDifference = last.Value - first.Value;
                 double averageFlowRateLps = volumeDifference / timeDifference;
                 double averageFlowRateM3ph = averageFlowRateLps * 3.6; // Conversion en m³/h
-
-                Console.WriteLine($"Average Flow Rate: {averageFlowRateLps:F2} L/s, {averageFlowRateM3ph:F2} m³/h");
             }
         }
     }
