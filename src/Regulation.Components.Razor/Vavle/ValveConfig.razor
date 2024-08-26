@@ -7,14 +7,14 @@
 @namespace Regulation.Components
 @attribute [ViewOf("Vavle configuration", typeof(ThreeWayValve), typeof(ValveConfig), ViewContext.Configuration)]
 
-<MudSelect Label="Open valve GPIO" @bind-Value="Component.OpeningPin" Variant="Variant.Filled" >
+<MudSelect Label="Open valve GPIO" @bind-Value="Component.OpeningGpio" Variant="Variant.Filled" >
     @foreach (var gpio in _gpios)
     {
         <MudSelectItem Value="@gpio">@gpio.InstanceName</MudSelectItem>
     }
 </MudSelect>
 
-<MudSelect Label="Open valve GPIO" @bind-Value="Component.ClosingPin" Variant="Variant.Filled" >
+<MudSelect Label="Close valve GPIO" @bind-Value="Component.ClosingGpio" Variant="Variant.Filled" >
     @foreach (var gpio in _gpios)
     {
         <MudSelectItem Value="@gpio">@gpio.InstanceName</MudSelectItem>
@@ -35,7 +35,7 @@
     [Parameter] public ThreeWayValve Component { get; set; } = null!;
 
     private List<OutputGpio> _gpios => ComponentService.GetInstancesOfType<OutputGpio>()
-    .Where(g => g.Id != (Component.OpeningPin?.Id ?? Guid.Empty) || g.Id != (Component.ClosingPin?.Id ?? Guid.Empty)).ToList();
+    .Where(g => g.Id != (Component.OpeningGpio?.Id ?? Guid.Empty) || g.Id != (Component.ClosingGpio?.Id ?? Guid.Empty)).ToList();
 
     protected override void OnInitialized()
     {

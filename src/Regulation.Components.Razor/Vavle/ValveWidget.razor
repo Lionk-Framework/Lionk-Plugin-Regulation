@@ -3,42 +3,44 @@
 @using MudBlazor
 @using System.ComponentModel
 @namespace Regulation.Components
-@attribute [ViewOf("Vavle", typeof(ThreeWayValve), typeof(ValveWidget), ViewContext.Widget)]
+@attribute [ViewOf("Valve view", typeof(ThreeWayValve), typeof(ValveWidget), ViewContext.Widget)]
 
 <MudText Typo="Typo.h6">State: @Component.State.ToString()</MudText>
 <MudChip Color="_chipColorOpenPin" T="string"> @_chipTextOpenPin</MudChip>
 <MudChip Color="_chipColorClosePin" T="string"> @_chipTextClosePin</MudChip>
 @if (Component.RemainingTime != TimeSpan.Zero)
 {
-    <MudText Typo="Typo.h6">Remaining time: @Component.RemainingTime.ToString("HH:mm:ss")</MudText>
+    <MudText Typo="Typo.h6">Remaining time: @Component.RemainingTime.ToString()</MudText>
 }
 
 @code {
     [Parameter] public ThreeWayValve Component { get; set; } = null!;
 
     private string _chipTextOpenPin
-    => Component.OpeningPin is not null
-    ? Component.OpeningPin.Pin is Rpi4Gpio.None ? "Open GPIO not configured" : Component.OpeningPin.Pin.ToString() : "No Open Gpio selected";
+    => Component.OpeningGpio is not null
+    ? Component.OpeningGpio.Pin is Rpi4Gpio.None ? "Open GPIO not configured" : "Open Gpio " + Component.OpeningGpio.Pin.ToString() : "No Open Gpio selected";
 
     private string _chipTextClosePin
-    => Component.ClosingPin is not null
-    ? Component.ClosingPin.Pin is Rpi4Gpio.None ? "Close GPIO not configured" : Component.ClosingPin.Pin.ToString() : "No Close Gpio selected";
+    => Component.ClosingGpio is not null
+    ? Component.ClosingGpio.Pin is Rpi4Gpio.None ? "Close GPIO not configured" : "Close Gpio " + Component.ClosingGpio.Pin.ToString() : "No Close Gpio selected";
 
     private Color _chipColorOpenPin
-    => Component.OpeningPin is not null
-    ? Component.OpeningPin.Pin is Rpi4Gpio.None ? Color.Warning : Color.Success : Color.Default;
+    => Component.OpeningGpio is not null
+    ? Component.OpeningGpio.Pin is Rpi4Gpio.None ? Color.Warning : Color.Success : Color.Default;
 
     private Color _chipColorClosePin
-    => Component.ClosingPin is not null
-    ? Component.ClosingPin.Pin is Rpi4Gpio.None ? Color.Warning : Color.Success : Color.Default;
+    => Component.ClosingGpio is not null
+    ? Component.ClosingGpio.Pin is Rpi4Gpio.None ? Color.Warning : Color.Success : Color.Default;
 
     protected override void OnInitialized()
     {
         if (Component is null) throw new ArgumentException("Component must be set");
-        Component.PropertyChanged += OnPropertyChange;
+        Component.PropertyChanged += Changed;
+        Component.GpioChanged += Changed;
+        Component.StateChanged += Changed;
     }
 
-    private void OnPropertyChange(object? sender, PropertyChangedEventArgs e)
+    private void Changed(object? sender, EventArgs e)
     {
         InvokeAsync(StateHasChanged);
     }
