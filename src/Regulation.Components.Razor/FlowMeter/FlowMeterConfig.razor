@@ -1,0 +1,22 @@
+﻿@using Lionk.Core.Component
+@using Lionk.Core.View
+@using Lionk.Rpi.Gpio
+@using MudBlazor
+@using System.ComponentModel
+@inject IComponentService ComponentService
+@namespace Regulation.Components
+@attribute [ViewOf("FlowMeter Configuration", typeof(FlowMeter), typeof(FlowMeterConfig), ViewContext.Configuration)]
+
+<MudSelect Label="Open valve GPIO" @bind-Value="Component.Gpio">
+    @foreach (var gpio in _gpios)
+    {
+        <MudSelectItem Value="@gpio">@gpio.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+
+@code {
+    private List<InputGpio> _gpios => ComponentService.GetInstancesOfType<InputGpio>().ToList();
+
+    [Parameter] public FlowMeter Component { get; set; } = null!;
+}
