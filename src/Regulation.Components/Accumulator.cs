@@ -2,6 +2,9 @@
 
 using Lionk.Core;
 using Lionk.Core.Component;
+using Lionk.Core.DataModel;
+using Lionk.TemperatureSensor;
+using Newtonsoft.Json;
 
 namespace Regulation.Components;
 
@@ -11,11 +14,46 @@ namespace Regulation.Components;
 [NamedElement("Accumulator", "This component is used to represent an accumulator that store hot water.")]
 public class Accumulator : BaseComponent
 {
+    #region Public Events
+
+    /// <summary>
+    /// Event raised when the temperature changed.
+    /// </summary>
+    public event EventHandler? TemperatureChanged;
+
+    #endregion Public Events
+
+    #region Private Fields
+
     private Guid _bottomSensorId;
-    private Guid _middleSensorId;
-    private Guid _topSensorId;
     private double _maxTemp = 85.0;
+    private Guid _middleSensorId;
     private double _minTemp = 20.0;
+    private Guid _topSensorId;
+
+    #endregion Private Fields
+
+    #region Public Properties
+
+    private BaseTemperatureSensor? _bottomSensor;
+    private BaseTemperatureSensor? _middleSensor;
+    private BaseTemperatureSensor? _topSensor;
+
+    /// <summary>
+    /// Gets or sets the bottom sensor.
+    /// </summary>
+    public BaseTemperatureSensor? BottomSensor
+    {
+        get => _bottomSensor;
+        set
+        {
+            _bottomSensor = value;
+            if (_bottomSensor is not null)
+            {
+                _bottomSensor.NewValueAvailable += OnNewTemperatureAvailable;
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the bottom part sensor id.
@@ -40,6 +78,23 @@ public class Accumulator : BaseComponent
             }
 
             SetField(ref _maxTemp, value);
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the middle sensor.
+    /// </summary>
+    [JsonIgnore]
+    public BaseTemperatureSensor? MiddleSensor
+    {
+        get => _middleSensor;
+        set
+        {
+            _middleSensor = value;
+            if (_middleSensor is not null)
+            {
+                _middleSensor.NewValueAvailable += OnNewTemperatureAvailable;
+            }
         }
     }
 
@@ -70,6 +125,23 @@ public class Accumulator : BaseComponent
     }
 
     /// <summary>
+    /// Gets or sets the top sensor.
+    /// </summary>
+    [JsonIgnore]
+    public BaseTemperatureSensor? TopSensor
+    {
+        get => _topSensor;
+        set
+        {
+            _topSensor = value;
+            if (_topSensor is not null)
+            {
+                _topSensor.NewValueAvailable += OnNewTemperatureAvailable;
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets or sets the top part sensor id.
     /// </summary>
     public Guid TopSensorId
@@ -77,4 +149,7 @@ public class Accumulator : BaseComponent
         get => _topSensorId;
         set => SetField(ref _topSensorId, value);
     }
+
+    private void OnNewTemperatureAvailable(object? sender, MeasureEventArgs<double> e) => TemperatureChanged?.Invoke(this, EventArgs.Empty);
+    #endregion Public Properties
 }

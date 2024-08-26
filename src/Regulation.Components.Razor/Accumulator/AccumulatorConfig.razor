@@ -47,22 +47,24 @@
 @code {
     [Parameter] public Accumulator Component { get; set; } = null!;
     private List<BaseTemperatureSensor> _sensors { get; set; } = new();
-    private ComponentContainer TopSensorContainer = null!;
-    private ComponentContainer MiddleSensorContainer = null!;
-    private ComponentContainer BottomSensorContainer = null!;
 
     protected override void OnInitialized()
     {
         if (Component is null) throw new ArgumentException("Component must be set");
         GetElements();
+        Component.PropertyChanged += Changed;
+    }
+
+    private void Changed(object? sender, object? args)
+    {
+        Component.TopSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.TopSensorId);
+        Component.MiddleSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.MiddleSensorId);
+        Component.BottomSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.BottomSensorId);
     }
 
     private void GetElements()
     {
-        TopSensorContainer = new ComponentContainer(ComponentService, Component.TopSensorId);
-        MiddleSensorContainer = new ComponentContainer(ComponentService, Component.MiddleSensorId);
-        BottomSensorContainer = new ComponentContainer(ComponentService, Component.BottomSensorId);
-
+        
         _sensors = ComponentService.GetInstancesOfType<BaseTemperatureSensor>().ToList();
         if (_sensors is null || !_sensors.Any()) return;
     }

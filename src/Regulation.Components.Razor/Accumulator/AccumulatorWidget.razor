@@ -17,13 +17,13 @@
      xmlns:svg="http://www.w3.org/2000/svg">
     <defs id="defs1">
         <linearGradient id="linearGradient10">
-            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(_topTemp);"
+            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(Component.TopSensor?.GetTemperature() ?? 0);"
                   offset="0.12891345"
                   id="stop11" />
-            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(_middleTemp);"
+            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(Component.MiddleSensor?.GetTemperature() ?? 0);"
                   offset="0.50644565"
                   id="stop13" />
-            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(_bottomTemp);"
+            <stop style="stop-color:#ff0000;stop-opacity:@opacityFromTemp(Component.BottomSensor?.GetTemperature() ?? 0);"
                   offset="0.88397789"
                   id="stop12" />
         </linearGradient>
@@ -67,47 +67,24 @@
     padding-top: 45px;
     padding-bottom: 25px;
 ">
-    <MudText Typo="Typo.body2">@_topTempString</MudText>
-    <MudText Typo="Typo.body2">@_middleTempString</MudText>
-    <MudText Typo="Typo.body2">@_bottomTempString</MudText>
+    <MudText Typo="Typo.body2">@(Component.TopSensor?.GetTemperatureString() ?? string.Empty)</MudText>
+    <MudText Typo="Typo.body2">@(Component.MiddleSensor?.GetTemperatureString() ?? string.Empty)</MudText>
+    <MudText Typo="Typo.body2">@(Component.BottomSensor?.GetTemperatureString() ?? string.Empty)</MudText>
 </div>
 
 @code {
     [Parameter] public Accumulator Component { get; set; } = null!;
 
-    private ComponentContainer TopSensorContainer = null!;
-    private ComponentContainer MiddleSensorContainer = null!;
-    private ComponentContainer BottomSensorContainer = null!;
-
-    private BaseTemperatureSensor? TopSensor = null!;
-    private BaseTemperatureSensor? MiddleSensor = null!;
-    private BaseTemperatureSensor? BottomSensor = null!;
-
-    private double _topTemp => TopSensor?.GetTemperature() ?? double.NaN;
-    private double _middleTemp => MiddleSensor?.GetTemperature() ?? double.NaN;
-    private double _bottomTemp => BottomSensor?.GetTemperature() ?? double.NaN;
-
-    private string _topTempString => _topTemp + TopSensor?.GetUnit() ?? string.Empty;
-    private string _middleTempString => _middleTemp + MiddleSensor?.GetUnit() ?? string.Empty;
-    private string _bottomTempString => _bottomTemp + BottomSensor?.GetUnit() ?? string.Empty;
-
 
     protected override void OnInitialized()
     {
-        TopSensorContainer = new ComponentContainer(ComponentService, Component.TopSensorId);
-        MiddleSensorContainer = new ComponentContainer(ComponentService, Component.MiddleSensorId);
-        BottomSensorContainer = new ComponentContainer(ComponentService, Component.BottomSensorId);
+        Component.PropertyChanged += Changed;
+        Component.TemperatureChanged += Changed;
+    }
 
-        TopSensor = (BaseTemperatureSensor?)TopSensorContainer.Component;
-        MiddleSensor = (BaseTemperatureSensor?)MiddleSensorContainer.Component;
-        BottomSensor = (BaseTemperatureSensor?)BottomSensorContainer.Component;
-
-        if (TopSensor is not null && MiddleSensor is not null && BottomSensor is not null)
-        {
-            TopSensor.NewValueAvailable += (sender, args) => InvokeAsync(StateHasChanged);
-            MiddleSensor.NewValueAvailable += (sender, args) => InvokeAsync(StateHasChanged);
-            BottomSensor.NewValueAvailable += (sender, args) => InvokeAsync(StateHasChanged);
-        }
+    private void Changed(object ? sender, object ? args)
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private double opacityFromTemp(double temp)

@@ -244,7 +244,7 @@ public class ThreeWayValve : BaseExecutableComponent
                     break;
 
                 default:
-                    State = VavleState.Opening;
+                    State = VavleState.Initialising;
                     break;
             }
 
