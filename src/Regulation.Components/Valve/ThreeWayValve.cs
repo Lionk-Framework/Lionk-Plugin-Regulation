@@ -1,6 +1,5 @@
 ﻿// Copyright © 2024 Lionk Project
 
-using System.ComponentModel;
 using System.Device.Gpio;
 using System.Text.Json.Serialization;
 using Lionk.Core;
@@ -18,11 +17,6 @@ public class ThreeWayValve : BaseExecutableComponent
     #region Public Events
 
     /// <summary>
-    /// Event raised when a GPIO pin changed.
-    /// </summary>
-    public event EventHandler? GpioChanged;
-
-    /// <summary>
     /// Event raised when the state of the valve changed.
     /// </summary>
     public event EventHandler? StateChanged;
@@ -32,8 +26,10 @@ public class ThreeWayValve : BaseExecutableComponent
 
     private readonly object _locker = new();
     private OutputGpio? _closingGpio;
+    private Guid _closingGpioId;
     private bool _isBusy = false;
     private OutputGpio? _openingGpio;
+    private Guid _openingGpioId;
     private DateTime _startActionTime = DateTime.MinValue;
     #endregion Private Fields
 
@@ -60,9 +56,18 @@ public class ThreeWayValve : BaseExecutableComponent
             _closingGpio = value;
             if (_closingGpio is not null)
             {
-                _closingGpio.PropertyChanged += OnGpioConfigurationChanged;
+                ClosingGpioId = _closingGpio.Id;
             }
         }
+    }
+
+    /// <summary>
+    /// Gets or sets the pin id that is used to close the valve.
+    /// </summary>
+    public Guid ClosingGpioId
+    {
+        get => _closingGpioId;
+        set => SetField(ref _closingGpioId, value);
     }
 
     /// <summary>
@@ -78,6 +83,7 @@ public class ThreeWayValve : BaseExecutableComponent
     /// <summary>
     /// Gets or sets the pin that is used to open the valve.
     /// </summary>
+    [JsonIgnore]
     public OutputGpio? OpeningGpio
     {
         get => _openingGpio;
@@ -86,9 +92,18 @@ public class ThreeWayValve : BaseExecutableComponent
             _openingGpio = value;
             if (_openingGpio is not null)
             {
-                _openingGpio.PropertyChanged += OnGpioConfigurationChanged;
+                OpeningGpioId = _openingGpio.Id;
             }
         }
+    }
+
+    /// <summary>
+    /// Gets or sets the pin id that is used to close the valve.
+    /// </summary>
+    public Guid OpeningGpioId
+    {
+        get => _openingGpioId;
+        set => SetField(ref _openingGpioId, value);
     }
 
     /// <summary>
@@ -104,9 +119,9 @@ public class ThreeWayValve : BaseExecutableComponent
     /// <summary>
     /// Gets or sets the order to execute.
     /// </summary>
+    [JsonIgnore]
     public ValveOrder ValveOrder { get; set; } = ValveOrder.Stop;
 
-    private void OnGpioConfigurationChanged(object? sender, PropertyChangedEventArgs e) => GpioChanged?.Invoke(this, EventArgs.Empty);
     #endregion Public Properties
 
     #region Private Methods
@@ -154,7 +169,7 @@ public class ThreeWayValve : BaseExecutableComponent
             StateChanged?.Invoke(this, EventArgs.Empty);
             OpeningGpio.Execute();
             ClosingGpio.Execute();
-            Thread.Sleep(10);
+            Thread.Sleep(500);
         }
     }
 
@@ -206,7 +221,7 @@ public class ThreeWayValve : BaseExecutableComponent
             OpeningGpio.Execute();
             ClosingGpio.Execute();
             StateChanged?.Invoke(this, EventArgs.Empty);
-            Thread.Sleep(10);
+            Thread.Sleep(500);
         }
 
         IsInitialized = true;
@@ -255,7 +270,7 @@ public class ThreeWayValve : BaseExecutableComponent
             OpeningGpio.Execute();
             ClosingGpio.Execute();
             StateChanged?.Invoke(this, EventArgs.Empty);
-            Thread.Sleep(10);
+            Thread.Sleep(500);
         }
     }
 
@@ -293,6 +308,7 @@ public class ThreeWayValve : BaseExecutableComponent
                 _isBusy = false;
             }
         });
+        thread.Priority = ThreadPriority.Lowest;
         thread.Start();
     }
 

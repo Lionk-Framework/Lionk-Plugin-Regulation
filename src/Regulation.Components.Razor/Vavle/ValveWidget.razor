@@ -1,7 +1,9 @@
-﻿@using Lionk.Core.View
+﻿@using Lionk.Core.Component
+@using Lionk.Core.View
 @using Lionk.Rpi.Gpio
 @using MudBlazor
 @using System.ComponentModel
+@inject IComponentService ComponentService
 @namespace Regulation.Components
 @attribute [ViewOf("Valve view", typeof(ThreeWayValve), typeof(ValveWidget), ViewContext.Widget)]
 
@@ -36,8 +38,23 @@
     {
         if (Component is null) throw new ArgumentException("Component must be set");
         Component.PropertyChanged += Changed;
-        Component.GpioChanged += Changed;
         Component.StateChanged += Changed;
+        if (Component.OpeningGpioId != Guid.Empty)
+        {
+            Component.OpeningGpio = (OutputGpio?)ComponentService.GetInstanceById(Component.OpeningGpioId);
+            if (Component.OpeningGpio is not null)
+            {
+                Component.OpeningGpio.PropertyChanged += Changed;
+            }
+        }
+        if (Component.ClosingGpioId != Guid.Empty)
+        {
+            Component.ClosingGpio = (OutputGpio?)ComponentService.GetInstanceById(Component.ClosingGpioId);
+            if (Component.ClosingGpio is not null)
+            {
+                Component.ClosingGpio.PropertyChanged += Changed;
+            }
+        }
     }
 
     private void Changed(object? sender, EventArgs e)
