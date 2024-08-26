@@ -80,6 +80,19 @@
     {
         Component.PropertyChanged += Changed;
         Component.TemperatureChanged += Changed;
+
+        if (Component.TopSensorId != Guid.Empty)
+        {
+            Component.TopSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.TopSensorId);
+        }
+        if (Component.MiddleSensorId != Guid.Empty)
+        {
+            Component.MiddleSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.MiddleSensorId);
+        }
+        if (Component.BottomSensorId != Guid.Empty)
+        {
+            Component.BottomSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.BottomSensorId);
+        }
     }
 
     private void Changed(object ? sender, object ? args)

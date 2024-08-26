@@ -42,6 +42,7 @@ public class Accumulator : BaseComponent
     /// <summary>
     /// Gets or sets the bottom sensor.
     /// </summary>
+    [JsonIgnore]
     public BaseTemperatureSensor? BottomSensor
     {
         get => _bottomSensor;
