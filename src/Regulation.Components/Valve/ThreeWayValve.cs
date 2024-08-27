@@ -114,7 +114,7 @@ public class ThreeWayValve : BaseExecutableComponent
     /// <summary>
     /// Gets the state of the valve.
     /// </summary>
-    public VavleState State { get; private set; } = VavleState.Undefined;
+    public ValveState State { get; private set; } = ValveState.Undefined;
 
     /// <summary>
     /// Gets or sets the order to execute.
@@ -129,9 +129,9 @@ public class ThreeWayValve : BaseExecutableComponent
     private void CloseProcess()
     {
         if (OpeningGpio is null || ClosingGpio is null) return;
-        if (!IsInitialized || State is VavleState.Undefined) InitializeProcess();
+        if (!IsInitialized || State is ValveState.Undefined) InitializeProcess();
         _startActionTime = DateTime.UtcNow;
-        while (State is not VavleState.Closed)
+        while (State is not ValveState.Closed)
         {
             if (ValveOrder is ValveOrder.Stop)
             {
@@ -141,16 +141,16 @@ public class ThreeWayValve : BaseExecutableComponent
 
             switch (State)
             {
-                case VavleState.Closed:
+                case ValveState.Closed:
                     RemainingTime = TimeSpan.Zero;
                     break;
 
-                case VavleState.Closing:
+                case ValveState.Closing:
                     OpeningGpio.PinValue = PinValue.Low;
                     ClosingGpio.PinValue = PinValue.High;
                     if (DateTime.UtcNow - _startActionTime >= TimeSpan.FromSeconds(OpeningDuration))
                     {
-                        State = VavleState.Closed;
+                        State = ValveState.Closed;
                         RemainingTime = TimeSpan.Zero;
                         ClosingGpio.PinValue = PinValue.Low;
                     }
@@ -162,7 +162,7 @@ public class ThreeWayValve : BaseExecutableComponent
                     break;
 
                 default:
-                    State = VavleState.Closing;
+                    State = ValveState.Closing;
                     break;
             }
 
@@ -183,7 +183,7 @@ public class ThreeWayValve : BaseExecutableComponent
 
         _startActionTime = DateTime.UtcNow;
         int initializationTime = OpeningDuration + 5;
-        while (State is not VavleState.Initialised)
+        while (State is not ValveState.Initialised)
         {
             if (ValveOrder is ValveOrder.Stop)
             {
@@ -193,16 +193,16 @@ public class ThreeWayValve : BaseExecutableComponent
 
             switch (State)
             {
-                case VavleState.Initialised:
+                case ValveState.Initialised:
                     RemainingTime = TimeSpan.Zero;
                     break;
 
-                case VavleState.Initialising:
+                case ValveState.Initialising:
                     OpeningGpio.PinValue = PinValue.Low;
                     ClosingGpio.PinValue = PinValue.High;
                     if (DateTime.UtcNow - _startActionTime >= TimeSpan.FromSeconds(initializationTime))
                     {
-                        State = VavleState.Initialised;
+                        State = ValveState.Initialised;
                         RemainingTime = TimeSpan.Zero;
                         ClosingGpio.PinValue = PinValue.Low;
                     }
@@ -214,7 +214,7 @@ public class ThreeWayValve : BaseExecutableComponent
                     break;
 
                 default:
-                    State = VavleState.Initialising;
+                    State = ValveState.Initialising;
                     break;
             }
 
@@ -230,9 +230,9 @@ public class ThreeWayValve : BaseExecutableComponent
     private void OpenProcess()
     {
         if (OpeningGpio is null || ClosingGpio is null) return;
-        if (!IsInitialized || State is VavleState.Undefined) InitializeProcess();
+        if (!IsInitialized || State is ValveState.Undefined) InitializeProcess();
         _startActionTime = DateTime.UtcNow;
-        while (State is not VavleState.Open)
+        while (State is not ValveState.Open)
         {
             if (ValveOrder is ValveOrder.Stop)
             {
@@ -242,16 +242,16 @@ public class ThreeWayValve : BaseExecutableComponent
 
             switch (State)
             {
-                case VavleState.Open:
+                case ValveState.Open:
                     RemainingTime = TimeSpan.Zero;
                     break;
 
-                case VavleState.Opening:
+                case ValveState.Opening:
                     OpeningGpio.PinValue = PinValue.High;
                     ClosingGpio.PinValue = PinValue.Low;
                     if (DateTime.UtcNow - _startActionTime >= TimeSpan.FromSeconds(OpeningDuration))
                     {
-                        State = VavleState.Open;
+                        State = ValveState.Open;
                         RemainingTime = TimeSpan.Zero;
                         OpeningGpio.PinValue = PinValue.Low;
                     }
@@ -263,7 +263,7 @@ public class ThreeWayValve : BaseExecutableComponent
                     break;
 
                 default:
-                    State = VavleState.Opening;
+                    State = ValveState.Opening;
                     break;
             }
 
@@ -308,7 +308,6 @@ public class ThreeWayValve : BaseExecutableComponent
                 _isBusy = false;
             }
         });
-        thread.Priority = ThreadPriority.Lowest;
         thread.Start();
     }
 
@@ -317,7 +316,7 @@ public class ThreeWayValve : BaseExecutableComponent
         if (OpeningGpio is null || ClosingGpio is null) return;
         OpeningGpio.PinValue = PinValue.Low;
         ClosingGpio.PinValue = PinValue.Low;
-        State = VavleState.Undefined;
+        State = ValveState.Undefined;
         RemainingTime = TimeSpan.Zero;
 
         OpeningGpio.Execute();

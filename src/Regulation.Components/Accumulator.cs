@@ -151,6 +151,17 @@ public class Accumulator : BaseComponent
         set => SetField(ref _topSensorId, value);
     }
 
-    private void OnNewTemperatureAvailable(object? sender, MeasureEventArgs<double> e) => TemperatureChanged?.Invoke(this, EventArgs.Empty);
     #endregion Public Properties
+
+    #region Private Methods
+
+    private void OnNewTemperatureAvailable(object? sender, MeasureEventArgs<double> e) => TemperatureChanged?.Invoke(this, EventArgs.Empty);
+
+    #endregion Private Methods
+
+    /// <summary>
+    /// Gets the temperature of the high part of the Accumulator.
+    /// </summary>
+    /// <returns> The temperature of the high part of the Accumulator. </returns>
+    public double GetTopTemperature() => TopSensor?.GetTemperature() ?? double.NaN;
 }

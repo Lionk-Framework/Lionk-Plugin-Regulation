@@ -1,0 +1,75 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.Rpi.Gpio
+@using Lionk.TemperatureSensor
+@using MudBlazor
+@using System.ComponentModel
+@namespace Regulation.Components
+@attribute [ViewOf("Regulation Config", typeof(RegulationEngine), typeof(RegulationEngineConfig), ViewContext.Configuration)]
+
+<MudSelect Label="Accumulator 1" @bind-Value="Component.Accumulator1">
+    @foreach (var accumulator in _accumulators)
+    {
+        <MudSelectItem Value="accumulator">@accumulator.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+<MudSelect Label="Accumulator 2" @bind-Value="Component.Accumulator2">
+    @foreach (var accumulator in _accumulators)
+    {
+        <MudSelectItem Value="accumulator">@accumulator.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+<MudSelect Label="Chimney" @bind-Value="Component.Chimney">
+    @foreach (var chimney in _chimneys)
+    {
+        <MudSelectItem Value="chimney">@chimney.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+<MudSelect Label="Flow Meter" @bind-Value="Component.FlowMeter">
+    @foreach (var flowMeter in _flowMeters)
+    {
+        <MudSelectItem Value="flowMeter">@flowMeter.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+<MudSelect Label="HotWaterSensor Sensor" @bind-Value="Component.HotWaterSensor">
+    @foreach (var sensor in _hotWaterSensors)
+    {
+        <MudSelectItem Value="sensor">@sensor.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+<MudSelect Label="Vavle" @bind-Value="Component.Valve">
+    @foreach (var sensor in _threeWayValves)
+    {
+        <MudSelectItem Value="sensor">@sensor.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter] public RegulationEngine Component { get; set; } = null!;
+
+    private List<Accumulator> _accumulators = new();
+    private List<Chimney> _chimneys = new();
+    private List<FlowMeter> _flowMeters = new();
+    private List<BaseTemperatureSensor> _hotWaterSensors = new();
+    private List<ThreeWayValve> _threeWayValves = new();
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        base.OnInitialized();
+        _accumulators = ComponentService.GetInstancesOfType<Accumulator>().ToList();
+        _chimneys = ComponentService.GetInstancesOfType<Chimney>().ToList();
+        _flowMeters = ComponentService.GetInstancesOfType<FlowMeter>().ToList();
+        _hotWaterSensors = ComponentService.GetInstancesOfType<BaseTemperatureSensor>().ToList();
+        _threeWayValves = ComponentService.GetInstancesOfType<ThreeWayValve>().ToList();
+
+    }
+
+}

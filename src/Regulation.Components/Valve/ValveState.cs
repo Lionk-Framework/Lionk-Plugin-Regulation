@@ -5,7 +5,7 @@ namespace Regulation.Components;
 /// <summary>
 /// This enum represents the state of a valve.
 /// </summary>
-public enum VavleState
+public enum ValveState
 {
     /// <summary>
     /// The valve is closed.

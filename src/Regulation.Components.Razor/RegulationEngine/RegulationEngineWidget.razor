@@ -1,0 +1,55 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.Rpi.Gpio
+@using Lionk.TemperatureSensor
+@using MudBlazor
+@using System.ComponentModel
+@namespace Regulation.Components
+@attribute [ViewOf("Regulation", typeof(RegulationEngine), typeof(RegulationEngineWidget), ViewContext.Widget)]
+
+<MudText>Nothing to display</MudText>
+
+@code {
+    [Parameter] public RegulationEngine Component { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        InitializeSubComponents();
+    }
+
+    private void InitializeSubComponents()
+    {
+        if (Component.Accumulator1Id != Guid.Empty)
+        {
+            Component.Accumulator1 = (Accumulator?)ComponentService.GetInstanceById(Component.Accumulator1Id);
+        }
+
+        if (Component.Accumulator2Id != Guid.Empty)
+        {
+            Component.Accumulator2 = (Accumulator?)ComponentService.GetInstanceById(Component.Accumulator2Id);
+        }
+
+        if (Component.ChimneyId != Guid.Empty)
+        {
+            Component.Chimney = (Chimney?)ComponentService.GetInstanceById(Component.ChimneyId);
+        }
+
+        if (Component.FlowMeterId != Guid.Empty)
+        {
+            Component.FlowMeter = (FlowMeter?)ComponentService.GetInstanceById(Component.FlowMeterId);
+        }
+
+        if (Component.HotWaterSensorId != Guid.Empty)
+        {
+            Component.HotWaterSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.HotWaterSensorId);
+        }
+
+        if (Component.ValveId != Guid.Empty)
+        {
+            Component.Valve = (ThreeWayValve?)ComponentService.GetInstanceById(Component.ValveId);
+        }
+    }
+}
