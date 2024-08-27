@@ -11,6 +11,7 @@
 <MudText>Temperature chimney: @Component.GetTemperature().ToString()</MudText>
 <MudText>Temperature input: @Component.InputSensor?.GetTemperature().ToString()</MudText>
 <MudText>Temperature output: @Component.OutputSensor?.GetTemperature().ToString()</MudText>
+<MudText>Current Power: @Component.GetCurrentPowerString()</MudText>
 
 @code {
 
@@ -39,6 +40,15 @@
 
     private void InitializeSubComponents()
     {
+        if (Component.FlowMeterId != Guid.Empty)
+        {
+            Component.FlowMeter = (FlowMeter?)ComponentService.GetInstanceById(Component.FlowMeterId);
+            if (Component.FlowMeter is not null)
+            {
+                Component.FlowMeter.PropertyChanged += SubComponentChanged;
+            }
+        }
+
         if (Component.PumpId != Guid.Empty)
         {
             Component.Pump = (Pump?)ComponentService.GetInstanceById(Component.PumpId);

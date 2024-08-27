@@ -1,5 +1,6 @@
 ﻿// Copyright © 2024 Lionk Project
 
+using System.Runtime.CompilerServices;
 using Lionk.Core;
 using Lionk.Core.Component;
 using Lionk.Core.DataModel;
@@ -17,17 +18,19 @@ public class Chimney : BaseComponent
     #region Private Fields
 
     private const int MaxHistorySize = 5;
+    private const int SpecificHeatCapacity = 4180;
     private readonly Queue<double> _temperatureHistory = new();
 
     private BaseTemperatureSensor? _chimneySensor;
     private Guid _chimneySensorId;
+    private FlowMeter? _flowMeter;
+    private Guid _flowMeterId;
     private BaseTemperatureSensor? _inputSensor;
     private Guid _inputSensorId;
     private BaseTemperatureSensor? _outputSensor;
     private Guid _outputSensorId;
     private Pump? _pump;
     private Guid _pumpId;
-
     #endregion Private Fields
 
     #region Public Properties
@@ -63,13 +66,34 @@ public class Chimney : BaseComponent
     public double ConsideredFireThreshold { get; set; } = 30;
 
     /// <summary>
-    /// Gets or sets the output sensor id.
+    /// Gets or sets the flow meter.
     /// </summary>
-    public Guid InputSensorId
+    [JsonIgnore]
+    public FlowMeter? FlowMeter
     {
-        get => _inputSensorId;
-        set => SetField(ref _inputSensorId, value);
+        get => _flowMeter;
+        set
+        {
+            _flowMeter = value;
+            if (_flowMeter is null) return;
+            FlowMeterId = _flowMeter.Id;
+            _flowMeter.NewValueAvailable += OnNewMeterValueAvailable;
+        }
     }
+
+    /// <summary>
+    /// Gets or sets the chimney sensor.
+    /// </summary>
+    public Guid FlowMeterId
+    {
+        get => _flowMeterId;
+        set => SetField(ref _flowMeterId, value);
+    }
+
+    /// <summary>
+    /// Gets the current power of the chimney.
+    /// </summary>
+    public double CurrentPower { get; private set; }
 
     /// <summary>
     /// Gets or sets the input temperature.
@@ -88,18 +112,18 @@ public class Chimney : BaseComponent
     }
 
     /// <summary>
+    /// Gets or sets the output sensor id.
+    /// </summary>
+    public Guid InputSensorId
+    {
+        get => _inputSensorId;
+        set => SetField(ref _inputSensorId, value);
+    }
+
+    /// <summary>
     /// Gets or sets the maximum temperature.
     /// </summary>
     public double MaxTemperature { get; set; } = 85.0;
-
-    /// <summary>
-    /// Gets or sets the input sensor id.
-    /// </summary>
-    public Guid OutputSensorId
-    {
-        get => _outputSensorId;
-        set => SetField(ref _outputSensorId, value);
-    }
 
     /// <summary>
     /// Gets or sets the ouput temperature.
@@ -115,6 +139,15 @@ public class Chimney : BaseComponent
             _outputSensorId = _outputSensor.Id;
             _outputSensor.NewValueAvailable += OnNewTemperatureAvailable;
         }
+    }
+
+    /// <summary>
+    /// Gets or sets the input sensor id.
+    /// </summary>
+    public Guid OutputSensorId
+    {
+        get => _outputSensorId;
+        set => SetField(ref _outputSensorId, value);
     }
 
     /// <summary>
@@ -147,39 +180,9 @@ public class Chimney : BaseComponent
     [JsonIgnore]
     public ChimneyState State { get; private set; } = ChimneyState.Off;
 
-    private void OnNewTemperatureAvailable(object? sender, MeasureEventArgs<double> e)
-    {
-        DefineState();
-        if (State is ChimneyState.Off && (Pump is null || !Pump.CanExecute))
-        {
-            // TODO Notification info
-            Console.WriteLine("Pump is not available - Info");
-        }
-        else if (Pump is null || !Pump.CanExecute)
-        {
-            // TODO Notification High severitiy
-            Console.WriteLine("Pump is not available - High Severity");
-        }
-        else if (State is ChimneyState.Error or ChimneyState.AtFullPower)
-        {
-            Pump.Speed = 1;
-            Pump.Execute();
-        }
-    }
-
     #endregion Public Properties
 
     #region Private Methods
-
-    /// <summary>
-    /// Gets the temperature of the chimney.
-    /// </summary>
-    /// <returns> The temperature of the chimney. </returns>
-    public double GetTemperature()
-    {
-        if (ChimneySensor is null) return double.NaN;
-        return ChimneySensor.GetTemperature();
-    }
 
     private void DefineState()
     {
@@ -229,9 +232,53 @@ public class Chimney : BaseComponent
         }
     }
 
+    private void OnNewMeterValueAvailable(object? sender, MeasureEventArgs<int> e) => CurrentPower = CalculatePower();
+
+    private void OnNewTemperatureAvailable(object? sender, MeasureEventArgs<double> e)
+    {
+        DefineState();
+        if (State is ChimneyState.Off && (Pump is null || !Pump.CanExecute))
+        {
+            // TODO Notification info
+            Console.WriteLine("Pump is not available - Info");
+        }
+        else if (Pump is null || !Pump.CanExecute)
+        {
+            // TODO Notification High severitiy
+            Console.WriteLine("Pump is not available - High Severity");
+        }
+        else if (State is ChimneyState.Error or ChimneyState.AtFullPower)
+        {
+            Pump.Speed = 1;
+            Pump.Execute();
+        }
+
+        CurrentPower = CalculatePower();
+    }
+
     #endregion Private Methods
 
     #region Public Methods
+
+    /// <summary>
+    /// Methode to get the output temperature.
+    /// </summary>
+    /// <returns> The output temperature. </returns>
+    public double GetInputTemp()
+    {
+        if (InputSensor is null) return double.NaN;
+        return InputSensor.GetTemperature();
+    }
+
+    /// <summary>
+    /// Methode to get the output temperature.
+    /// </summary>
+    /// <returns> The output temperature. </returns>
+    public double GetOutputTemp()
+    {
+        if (OutputSensor is null) return double.NaN;
+        return OutputSensor.GetTemperature();
+    }
 
     /// <summary>
     /// Methode to set the pump speed.
@@ -262,24 +309,38 @@ public class Chimney : BaseComponent
     }
 
     /// <summary>
-    /// Methode to get the output temperature.
+    /// Methode to calculate the power of the chimney.
     /// </summary>
-    /// <returns> The output temperature. </returns>
-    public double GetOutputTemp()
+    /// <returns> The power of the chimney. </returns>
+    public double CalculatePower()
     {
-        if (OutputSensor is null) return double.NaN;
-        return OutputSensor.GetTemperature();
+        if (FlowMeter is null || InputSensor is null || OutputSensor is null)
+            return 0;
+
+        double flowRateInLiterPerSecond = FlowMeter.GetAverageFlowRateLps();
+
+        double tempDifference = GetOutputTemp() - GetInputTemp();
+
+        double power = flowRateInLiterPerSecond * SpecificHeatCapacity * tempDifference;
+
+        return Math.Round(power, 1);
     }
 
     /// <summary>
-    /// Methode to get the output temperature.
+    /// Gets the temperature of the chimney.
     /// </summary>
-    /// <returns> The output temperature. </returns>
-    internal double GetInputTemp()
+    /// <returns> The temperature of the chimney. </returns>
+    public double GetTemperature()
     {
-        if (InputSensor is null) return double.NaN;
-        return InputSensor.GetTemperature();
+        if (ChimneySensor is null) return double.NaN;
+        return ChimneySensor.GetTemperature();
     }
+
+    /// <summary>
+    /// Gets the power of the chimney as a string.
+    /// </summary>
+    /// <returns> The power of the chimney as a string. </returns>
+    public string GetCurrentPowerString() => CurrentPower.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', ' ') + " W";
 
     #endregion Public Methods
 }

@@ -30,13 +30,6 @@
     }
 </MudSelect>
 
-<MudSelect Label="Flow Meter" @bind-Value="Component.FlowMeter">
-    @foreach (var flowMeter in _flowMeters)
-    {
-        <MudSelectItem Value="flowMeter">@flowMeter.InstanceName</MudSelectItem>
-    }
-</MudSelect>
-
 <MudSelect Label="HotWaterSensor Sensor" @bind-Value="Component.HotWaterSensor">
     @foreach (var sensor in _hotWaterSensors)
     {
@@ -56,7 +49,7 @@
 
     private List<Accumulator> _accumulators = new();
     private List<Chimney> _chimneys = new();
-    private List<FlowMeter> _flowMeters = new();
+
     private List<BaseTemperatureSensor> _hotWaterSensors = new();
     private List<ThreeWayValve> _threeWayValves = new();
 
@@ -66,7 +59,6 @@
         base.OnInitialized();
         _accumulators = ComponentService.GetInstancesOfType<Accumulator>().ToList();
         _chimneys = ComponentService.GetInstancesOfType<Chimney>().ToList();
-        _flowMeters = ComponentService.GetInstancesOfType<FlowMeter>().ToList();
         _hotWaterSensors = ComponentService.GetInstancesOfType<BaseTemperatureSensor>().ToList();
         _threeWayValves = ComponentService.GetInstancesOfType<ThreeWayValve>().ToList();
 

@@ -35,11 +35,19 @@
     }
 </MudSelect>
 
+<MudSelect Label="Flow Meter" @bind-Value="Component.FlowMeter" Variant="Variant.Filled">
+    @foreach (var flowMeter in _flowMeters)
+    {
+        <MudSelectItem Value="flowMeter">@flowMeter.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
 @code {
     [Parameter] public Chimney Component { get; set; } = null!;
 
     private List<BaseTemperatureSensor> _temperatureSensors = new List<BaseTemperatureSensor>();
     private List<Pump> _pumps = new List<Pump>();
+    private List<FlowMeter> _flowMeters = new();
 
     protected override void OnInitialized()
     {
@@ -47,5 +55,6 @@
         base.OnInitialized();
         _temperatureSensors = ComponentService.GetInstancesOfType<BaseTemperatureSensor>().ToList();
         _pumps = ComponentService.GetInstancesOfType<Pump>().ToList();
+        _flowMeters = ComponentService.GetInstancesOfType<FlowMeter>().ToList();
     }
 }

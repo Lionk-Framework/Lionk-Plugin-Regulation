@@ -25,8 +25,6 @@ public class RegulationEngine : BaseCyclicComponent
     private Guid _accumulator2Id;
     private Chimney? _chimney;
     private Guid _chimneyId;
-    private FlowMeter? _flowMeter;
-    private Guid _flowMeterId;
     private BaseTemperatureSensor? _hotWaterSensor;
     private Guid _hotWaterSensorId;
     private ThreeWayValve? _valve;
@@ -108,30 +106,6 @@ public class RegulationEngine : BaseCyclicComponent
     {
         get => _chimneyId;
         set => SetField(ref _chimneyId, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the flow meter.
-    /// </summary>
-    [JsonIgnore]
-    public FlowMeter? FlowMeter
-    {
-        get => _flowMeter;
-        set
-        {
-            _flowMeter = value;
-            if (_flowMeter is null) return;
-            FlowMeterId = _flowMeter.Id;
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the chimney sensor.
-    /// </summary>
-    public Guid FlowMeterId
-    {
-        get => _flowMeterId;
-        set => SetField(ref _flowMeterId, value);
     }
 
     /// <summary>

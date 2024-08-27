@@ -37,11 +37,6 @@
             Component.Chimney = (Chimney?)ComponentService.GetInstanceById(Component.ChimneyId);
         }
 
-        if (Component.FlowMeterId != Guid.Empty)
-        {
-            Component.FlowMeter = (FlowMeter?)ComponentService.GetInstanceById(Component.FlowMeterId);
-        }
-
         if (Component.HotWaterSensorId != Guid.Empty)
         {
             Component.HotWaterSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.HotWaterSensorId);
