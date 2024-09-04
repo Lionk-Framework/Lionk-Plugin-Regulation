@@ -224,4 +224,8 @@ public class RegulationEngine : BaseCyclicComponent
     /// Initializes a new instance of the <see cref="RegulationEngine"/> class.
     /// </summary>
     public RegulationEngine() => Period = TimeSpan.FromSeconds(3);
+
+    private void ComponentChecker()
+    {
+    }
 }

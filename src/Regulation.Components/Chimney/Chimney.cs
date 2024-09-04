@@ -1,6 +1,5 @@
 ﻿// Copyright © 2024 Lionk Project
 
-using System.Runtime.CompilerServices;
 using Lionk.Core;
 using Lionk.Core.Component;
 using Lionk.Core.DataModel;
