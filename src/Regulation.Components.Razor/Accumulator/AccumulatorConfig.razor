@@ -1,0 +1,71 @@
+﻿@using Lionk.Core.Component
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.TemperatureSensor
+@using MudBlazor
+@namespace Regulation.Components
+@inject IComponentService ComponentService
+@attribute [ViewOf("Accumulator Configuration", typeof(Accumulator), typeof(AccumulatorConfig), ViewContext.Configuration)]
+
+<MudGrid>
+    <MudItem xs="12" sm="4">
+        <MudSelect @bind-Value="Component.TopSensorId" Label="Top Sensor">
+            @foreach (var sensor in _sensors)
+            {
+                <MudSelectItem Value="@sensor.Id">@sensor.InstanceName</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+
+    <MudItem xs="12" sm="4">
+        <MudSelect @bind-Value="Component.MiddleSensorId" Label="Middle Sensor">
+            @foreach (var sensor in _sensors)
+            {
+                <MudSelectItem Value="@sensor.Id">@sensor.InstanceName</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+
+    <MudItem xs="12" sm="4">
+        <MudSelect @bind-Value="Component.BottomSensorId" Label="Bottom Sensor">
+            @foreach (var sensor in _sensors)
+            {
+                <MudSelectItem Value="@sensor.Id">@sensor.InstanceName</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-value="Component.MinTemp" Label="Min Temperature" T="double" />
+    </MudItem>
+
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-value="Component.MaxTemp" Label="Max Temperature" T="double"/>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public Accumulator Component { get; set; } = null!;
+    private List<BaseTemperatureSensor> _sensors { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        GetElements();
+        Component.PropertyChanged += Changed;
+    }
+
+    private void Changed(object? sender, object? args)
+    {
+        Component.TopSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.TopSensorId);
+        Component.MiddleSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.MiddleSensorId);
+        Component.BottomSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.BottomSensorId);
+    }
+
+    private void GetElements()
+    {
+        
+        _sensors = ComponentService.GetInstancesOfType<BaseTemperatureSensor>().ToList();
+        if (_sensors is null || !_sensors.Any()) return;
+    }
+}

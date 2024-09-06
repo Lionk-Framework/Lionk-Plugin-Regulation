@@ -1,0 +1,86 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.Rpi.Gpio
+@using MudBlazor
+@using System.ComponentModel
+@namespace Regulation.Components
+@attribute [ViewOf("Pump", typeof(Pump), typeof(PumpWidget), ViewContext.Widget)]
+@if (Component.PwmGpio is null)
+{
+    <MudChip Color="Color.Warning" T="string">PwmGpio not set</MudChip>
+}
+else
+{
+    <MudText Typo="Typo.h6">Speed: @_speed %</MudText>
+    <br/>
+        <PumpEngineDesign Class="rotating-object" style="
+    width: 40px;
+    height: 40px;
+    fill: currentColor;
+"/>
+}
+@code {
+    [Parameter] public Pump Component { get; set; } = null!;
+
+    private const string keyframes = "@keyFrames";
+    private string animation {
+        get
+        {
+            return $"animation: rotation {CalculateTimeForOneTurn(0.5, 4, _speed)}s infinite linear;";
+        }
+    }
+
+    private double CalculateTimeForOneTurn(double maxSpeedTime, double minSpeedTime, double speed)
+    {
+        if (speed <= 0)
+        {
+            return 0;
+        }
+        else if (speed >= 100)
+        {
+            return maxSpeedTime;
+        }
+        else
+        {
+            double time = minSpeedTime - ((speed / 100) * (minSpeedTime - maxSpeedTime));
+            return time;
+        }
+    }
+
+    private int _speed => (int)(Math.Round(Component.Speed * 100, 2));
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        Component.PwmGpio = ComponentService.GetInstanceById(Component.PwmGpioId) as StandardPwmGpio;
+        Component.SpeedChanged += OnPropertyChange;
+        Component.PropertyChanged += OnPropertyChange;
+    }
+
+    private void OnPropertyChange(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged); 
+    }
+}
+
+<style>
+    .rotating-object {
+    width: fit-content;
+    @if (Component.Speed > 0)
+    {
+        @animation
+    }
+    transform-origin: center; 
+}
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>

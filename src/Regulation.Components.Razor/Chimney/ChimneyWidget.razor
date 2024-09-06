@@ -1,0 +1,88 @@
+﻿@using Lionk.Core.Component
+@using Lionk.Core.View
+@using Lionk.TemperatureSensor
+@using MudBlazor
+@using System.ComponentModel
+@inject IComponentService ComponentService
+@namespace Regulation.Components
+@attribute [ViewOf("Chimney view", typeof(Chimney), typeof(ChimneyWidget), ViewContext.Widget)]
+
+<MudText>State: @Component.State.ToString()</MudText>
+<MudText>Temperature chimney: @Component.GetTemperature().ToString()</MudText>
+<MudText>Temperature input: @Component.InputSensor?.GetTemperature().ToString()</MudText>
+<MudText>Temperature output: @Component.OutputSensor?.GetTemperature().ToString()</MudText>
+<MudText>Current Power: @Component.GetCurrentPowerString()</MudText>
+
+@code {
+
+    [Parameter] public Chimney Component { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        base.OnInitialized();
+        Component.PropertyChanged += Changed;
+        InitializeSubComponents();
+
+    }
+
+    private void Changed(object? sender, EventArgs e)
+    {
+
+        InitializeSubComponents();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SubComponentChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void InitializeSubComponents()
+    {
+        if (Component.FlowMeterId != Guid.Empty)
+        {
+            Component.FlowMeter = (FlowMeter?)ComponentService.GetInstanceById(Component.FlowMeterId);
+            if (Component.FlowMeter is not null)
+            {
+                Component.FlowMeter.PropertyChanged += SubComponentChanged;
+            }
+        }
+
+        if (Component.PumpId != Guid.Empty)
+        {
+            Component.Pump = (Pump?)ComponentService.GetInstanceById(Component.PumpId);
+            if (Component.Pump is not null)
+            {
+                Component.Pump.PropertyChanged += SubComponentChanged;
+            }
+        }
+
+        if (Component.ChimneySensorId != Guid.Empty)
+        {
+            Component.ChimneySensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.ChimneySensorId);
+            if (Component.ChimneySensor is not null)
+            {
+                Component.ChimneySensor.PropertyChanged += SubComponentChanged;
+            }
+        }
+
+        if (Component.InputSensorId != Guid.Empty)
+        {
+            Component.InputSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.InputSensorId);
+            if (Component.InputSensor is not null)
+            {
+                Component.InputSensor.PropertyChanged += SubComponentChanged;
+            }
+        }
+
+        if (Component.OutputSensorId != Guid.Empty)
+        {
+            Component.OutputSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.OutputSensorId);
+            if (Component.OutputSensor is not null)
+            {
+                Component.OutputSensor.PropertyChanged += SubComponentChanged;
+            }
+        }
+    }
+}

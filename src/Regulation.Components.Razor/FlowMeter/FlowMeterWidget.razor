@@ -1,0 +1,44 @@
+﻿@using Lionk.Core.Component
+@using Lionk.Core.View
+@using Lionk.Rpi.Gpio
+@using MudBlazor
+@using System.ComponentModel
+@inject IComponentService ComponentService
+@namespace Regulation.Components
+@attribute [ViewOf("FlowMeter view", typeof(FlowMeter), typeof(FlowMeterWidget), ViewContext.Widget)]
+
+@if(Component.Gpio is null)
+{
+    <MudChip T="string" Color="Color.Warning">No GPIO selected</MudChip>
+}
+else
+{
+<MudText>@Component.GetValueString()</MudText>
+<MudText>@Component.GetAverageFlowRateLps() l/s</MudText>
+<MudText>@Component.GetAverageFlowRateM3ph() m³/h</MudText>
+<MudChip T="string" Color ="Color.Success">@Component.Gpio.Pin.ToString()</MudChip>
+}
+
+@code {
+
+    [Parameter] public FlowMeter Component { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        if (Component.GpioId != Guid.Empty) {
+            Component.Gpio = (InputGpio?)ComponentService.GetInstanceById(Component.GpioId);
+            if (Component.Gpio is not null)
+            {
+                Component.Gpio.PropertyChanged += Changed;
+            }
+        }
+        Component.PropertyChanged += Changed;
+        Component.NewValueAvailable += Changed;
+    }
+
+    private void Changed(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+}

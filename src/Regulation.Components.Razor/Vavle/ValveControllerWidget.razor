@@ -1,0 +1,66 @@
+﻿@using Lionk.Core.View
+@using MudBlazor
+@inject ISnackbar Snackbar
+@attribute [ViewOf("Valve controller", typeof(ThreeWayValve), typeof(ValveControllerWidget), ViewContext.Widget)]
+
+<MudButtonGroup>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="InitializePressed">Initialize</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StopPressed">Stop</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenPressed">Open</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClosePressed">Close</MudButton>
+</MudButtonGroup>
+
+@code {
+
+    [Parameter] public ThreeWayValve Component { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+    }
+
+    private void InitializePressed()
+    {
+        Component.ValveOrder = ValveOrder.Initialize;
+        if (!Component.CanExecute)
+        {
+            Snackbar.Add("Valve is not ready");
+            return;
+        }
+        Component.Execute();
+    }
+
+    private void StopPressed()
+    {
+        Component.ValveOrder = ValveOrder.Stop;
+        if (!Component.CanExecute)
+        {
+            Snackbar.Add("Valve is not ready");
+            return;
+        }
+        Component.Execute();
+    }
+
+    private void OpenPressed()
+    {
+        Component.ValveOrder = ValveOrder.Open;
+        if (!Component.CanExecute)
+        {
+            Snackbar.Add("Valve is not ready");
+            return;
+        }
+        Component.Execute();
+    }
+
+    private void ClosePressed()
+    {
+        Component.ValveOrder = ValveOrder.Close;
+        if (!Component.CanExecute)
+        {
+            Snackbar.Add("Valve is not ready");
+            return;
+        }
+        Component.Execute();
+    }
+
+}

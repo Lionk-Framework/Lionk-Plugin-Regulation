@@ -1,0 +1,72 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.TemperatureSensor
+@using MudBlazor
+@namespace Regulation.Components
+@attribute [ViewOf("Accumulator", typeof(Accumulator), typeof(AccumulatorWidget), ViewContext.Widget)]
+<style>
+    .degrade-div {
+        border-radius: 50px;
+        border: solid 3px;
+        width: 140px;
+        height: 250px;
+    }
+</style>
+<div class="degrade-div" @key=@_uniqueId style="@_gradient"></div>
+<div style="
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding-top: 45px;
+    padding-bottom: 25px;
+">
+    <MudText Typo="Typo.body2">@(Component.TopSensor?.GetTemperatureString() ?? string.Empty)</MudText>
+    <MudText Typo="Typo.body2">@(Component.MiddleSensor?.GetTemperatureString() ?? string.Empty)</MudText>
+    <MudText Typo="Typo.body2">@(Component.BottomSensor?.GetTemperatureString() ?? string.Empty)</MudText>
+</div>
+
+@code {
+    [Parameter] public Accumulator Component { get; set; } = null!;
+    private string _uniqueId = Guid.NewGuid().ToString();
+    private string _gradient => $"background: linear-gradient(to bottom, rgba(255, 0, 0, {_topTemp}) 10%, rgba(255, 0, 0, {_middleTemp}) 50%, rgba(255, 0, 0, {_bottomTemp}) 90%), blue";
+
+    private double _topTemp => OpacityFromTemp(Component.TopSensor?.GetTemperature() ?? 0);
+    private double _middleTemp => OpacityFromTemp(Component.MiddleSensor?.GetTemperature() ?? 0);
+    private double _bottomTemp => OpacityFromTemp(Component.BottomSensor?.GetTemperature() ?? 0);
+
+    protected override void OnInitialized()
+    {
+        Component.PropertyChanged += Changed;
+        Component.TemperatureChanged += Changed;
+
+        if (Component.TopSensorId != Guid.Empty)
+        {
+            Component.TopSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.TopSensorId);
+        }
+        if (Component.MiddleSensorId != Guid.Empty)
+        {
+            Component.MiddleSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.MiddleSensorId);
+        }
+        if (Component.BottomSensorId != Guid.Empty)
+        {
+            Component.BottomSensor = (BaseTemperatureSensor?)ComponentService.GetInstanceById(Component.BottomSensorId);
+        }
+    }
+
+    private void Changed(object? sender, object? args)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private double OpacityFromTemp(double temp)
+    {
+
+        return Math.Round((temp - Component.MinTemp) / (Component.MaxTemp - Component.MinTemp),1);
+    }
+}
