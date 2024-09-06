@@ -1,0 +1,29 @@
+﻿@inject IComponentService ComponentService
+@using Lionk.Core.Model.Component
+@using Lionk.Core.View
+@using Lionk.Core.Component
+@using Lionk.Rpi.Gpio
+@using MudBlazor
+@namespace Regulation.Components
+@attribute [ViewOf("Pump Configuration", typeof(Pump), typeof(PumpConfig), ViewContext.Configuration)]
+
+<MudSelect Label="PwmGpio" @bind-Value="Component.PwmGpio" Variant="Variant.Filled">
+    @foreach (var gpio in ComponentService.GetInstancesOfType<StandardPwmGpio>())
+    {
+        <MudSelectItem Value="@gpio">
+            @gpio.InstanceName
+        </MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+
+    [Parameter] public Pump Component { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        Component.PwmGpio = ComponentService.GetInstanceById(Component.PwmGpioId) as StandardPwmGpio;
+    }
+
+}

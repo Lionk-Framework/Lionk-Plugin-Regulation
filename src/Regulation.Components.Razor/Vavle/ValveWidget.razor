@@ -1,0 +1,65 @@
+﻿@using Lionk.Core.Component
+@using Lionk.Core.View
+@using Lionk.Rpi.Gpio
+@using MudBlazor
+@using System.ComponentModel
+@inject IComponentService ComponentService
+@namespace Regulation.Components
+@attribute [ViewOf("Valve view", typeof(ThreeWayValve), typeof(ValveWidget), ViewContext.Widget)]
+
+<MudText Typo="Typo.h6">State: @Component.State.ToString()</MudText>
+<MudChip Color="_chipColorOpenPin" T="string"> @_chipTextOpenPin</MudChip>
+<MudChip Color="_chipColorClosePin" T="string"> @_chipTextClosePin</MudChip>
+@if (Component.RemainingTime != TimeSpan.Zero)
+{
+    <MudText Typo="Typo.h6">Remaining time: @Component.RemainingTime.ToString()</MudText>
+}
+
+@code {
+    [Parameter] public ThreeWayValve Component { get; set; } = null!;
+
+    private string _chipTextOpenPin
+    => Component.OpeningGpio is not null
+    ? Component.OpeningGpio.Pin is Rpi4Gpio.None ? "Open GPIO not configured" : "Open Gpio " + Component.OpeningGpio.Pin.ToString() : "No Open Gpio selected";
+
+    private string _chipTextClosePin
+    => Component.ClosingGpio is not null
+    ? Component.ClosingGpio.Pin is Rpi4Gpio.None ? "Close GPIO not configured" : "Close Gpio " + Component.ClosingGpio.Pin.ToString() : "No Close Gpio selected";
+
+    private Color _chipColorOpenPin
+    => Component.OpeningGpio is not null
+    ? Component.OpeningGpio.Pin is Rpi4Gpio.None ? Color.Warning : Color.Success : Color.Default;
+
+    private Color _chipColorClosePin
+    => Component.ClosingGpio is not null
+    ? Component.ClosingGpio.Pin is Rpi4Gpio.None ? Color.Warning : Color.Success : Color.Default;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+        Component.PropertyChanged += Changed;
+        Component.StateChanged += Changed;
+        if (Component.OpeningGpioId != Guid.Empty)
+        {
+            Component.OpeningGpio = (OutputGpio?)ComponentService.GetInstanceById(Component.OpeningGpioId);
+            if (Component.OpeningGpio is not null)
+            {
+                Component.OpeningGpio.PropertyChanged += Changed;
+            }
+        }
+        if (Component.ClosingGpioId != Guid.Empty)
+        {
+            Component.ClosingGpio = (OutputGpio?)ComponentService.GetInstanceById(Component.ClosingGpioId);
+            if (Component.ClosingGpio is not null)
+            {
+                Component.ClosingGpio.PropertyChanged += Changed;
+            }
+        }
+    }
+
+    private void Changed(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+}
