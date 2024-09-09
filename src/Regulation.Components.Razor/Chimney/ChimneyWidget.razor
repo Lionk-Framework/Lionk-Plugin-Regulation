@@ -12,11 +12,13 @@
 <MudText>Temperature input: @Component.InputSensor?.GetTemperature().ToString()</MudText>
 <MudText>Temperature output: @Component.OutputSensor?.GetTemperature().ToString()</MudText>
 <MudText>Current Power: @Component.GetCurrentPowerString()</MudText>
+<MudText>Chimney Sensor reset count: @Component.ResetCount</MudText>
+
 
 @code {
 
     [Parameter] public Chimney Component { get; set; } = null!;
-
+  
     protected override void OnInitialized()
     {
         if (Component is null) throw new ArgumentException("Component must be set");
