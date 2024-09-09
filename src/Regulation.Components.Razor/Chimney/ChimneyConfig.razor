@@ -50,6 +50,8 @@
     }
 </MudSelect>
 
+<MudButton OnClick="ResetTotalResetCountClicked">Reset error counter</MudButton>
+
 <MudTooltip Text="The flow meter calibration factor is used to convert the flow meter pulses to liters per minute">
     <MudTextField Label="Chimney Sensor reset threshold" @bind-Value="Component.MaxResetCount" Variant="Variant.Filled" />
 </MudTooltip>
@@ -70,5 +72,11 @@
         _outputGpios = ComponentService.GetInstancesOfType<OutputGpio>().ToList();
         _pumps = ComponentService.GetInstancesOfType<Pump>().ToList();
         _flowMeters = ComponentService.GetInstancesOfType<FlowMeter>().ToList();
+    }
+
+    private void ResetTotalResetCountClicked()
+    {
+        Component.ResetTotalResetCount();
+        InvokeAsync(StateHasChanged);
     }
 }

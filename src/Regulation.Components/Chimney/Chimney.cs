@@ -1,5 +1,6 @@
 ﻿// Copyright © 2024 Lionk Project
 
+using System.Data;
 using Lionk.Core;
 using Lionk.Core.Component;
 using Lionk.Core.DataModel;
@@ -35,6 +36,7 @@ public class Chimney : BaseComponent
 
     private int _maxResetCount = 10;
     private int _resetCount = 0;
+    private int _totalResetCount = 0;
 
     #endregion Private Fields
 
@@ -68,6 +70,8 @@ public class Chimney : BaseComponent
             _chimneySensorPower = value;
             if (_chimneySensorPower is null) return;
             _chimneySensorPowerId = _chimneySensorPower.Id;
+            _chimneySensorPower.PinValue = 1;
+            _chimneySensorPower.Execute();
             _chimneySensorPower.NewValueAvailable += OnSensorPowerChanged;
         }
     }
@@ -382,7 +386,6 @@ public class Chimney : BaseComponent
             if (_resetCount < MaxResetCount)
             {
                 ResetChimneySensor();
-                _resetCount++;
             }
             else
             {
@@ -398,7 +401,15 @@ public class Chimney : BaseComponent
     /// Gets the power of the chimney as a string.
     /// </summary>
     /// <returns> The power of the chimney as a string. </returns>
-    public string GetCurrentPowerString() => CurrentPower.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', ' ') + " W";
+    /// <remarks> If the pump is off or the input temperature is higher than the output temperature, the method returns "-". </remarks>
+    public string GetCurrentPowerString()
+    {
+        if (Pump is null
+            || Pump.Speed == 0
+            || GetInputTemp() > GetOutputTemp()) return "-";
+
+        return CurrentPower.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', ' ') + " W";
+    }
 
     /// <summary>
     /// Resets the chimney sensor by turning it off and on and reseting the sensor if is in error.
@@ -406,6 +417,8 @@ public class Chimney : BaseComponent
     public void ResetChimneySensor()
     {
         if (ChimneySensorPower is null) return;
+        _resetCount++;
+        _totalResetCount++;
         ChimneySensorPower.PinValue = 0;
         ChimneySensorPower.Execute();
         Thread.Sleep(300);
@@ -413,6 +426,11 @@ public class Chimney : BaseComponent
         ChimneySensorPower.Execute();
         if (ChimneySensor is not null && ChimneySensor.IsInError) ChimneySensor.Reset();
     }
+
+    /// <summary>
+    /// Methode to reset the total reset count.
+    /// </summary>
+    public void ResetTotalResetCount() => _totalResetCount = 0;
 
     #endregion Public Methods
 }
