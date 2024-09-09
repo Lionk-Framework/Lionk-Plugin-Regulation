@@ -49,6 +49,12 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
     public int CurrentValue { get; set; } = 0;
 
     /// <summary>
+    /// Gets or sets a value indicating whether the component is enabled.
+    /// </summary>
+    [JsonIgnore]
+    public bool Enable { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets the gpio.
     /// </summary>
     [JsonIgnore]
@@ -96,7 +102,7 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
 
     private void OnPinValueChanged(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
     {
-        if (_lastMeasureTime.AddMilliseconds(_raisedEventTolerance) > DateTime.UtcNow) return;
+        if (!Enable || _lastMeasureTime.AddMilliseconds(_raisedEventTolerance) > DateTime.UtcNow) return;
         _lastMeasureTime = DateTime.UtcNow;
         _lastMeasureTime = DateTime.UtcNow;
         CurrentValue++;
