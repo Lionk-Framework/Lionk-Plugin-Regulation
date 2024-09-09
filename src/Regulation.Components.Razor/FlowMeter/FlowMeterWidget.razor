@@ -7,16 +7,23 @@
 @namespace Regulation.Components
 @attribute [ViewOf("FlowMeter view", typeof(FlowMeter), typeof(FlowMeterWidget), ViewContext.Widget)]
 
-@if(Component.Gpio is null)
+@if (Component.Gpio is null)
 {
     <MudChip T="string" Color="Color.Warning">No GPIO selected</MudChip>
 }
 else
 {
-<MudText>@Component.GetValueString()</MudText>
-<MudText>@Component.GetAverageFlowRateLps() l/s</MudText>
-<MudText>@Component.GetAverageFlowRateM3ph() m³/h</MudText>
-<MudChip T="string" Color ="Color.Success">@Component.Gpio.Pin.ToString()</MudChip>
+    <MudText>@Component.GetValueString()</MudText>
+    <MudText>@Component.GetAverageFlowRateLps() l/s</MudText>
+    <MudText>@Component.GetAverageFlowRateM3ph() m³/h</MudText>
+    <MudGrid>
+        <MudItem xs="6">
+            <MudChip T="string" Color="Color.Success">@Component.Gpio.Pin.ToString()</MudChip>
+        </MudItem>
+        <MudItem xs="6">
+            <MudChip T="string" Color=@(Component.Enable?Color.Success:Color.Default) Text=@(Component.Enable?"Enabled":"Disabled")/>
+        </MudItem>
+    </MudGrid>
 }
 
 @code {
@@ -26,7 +33,8 @@ else
     protected override void OnInitialized()
     {
         if (Component is null) throw new ArgumentException("Component must be set");
-        if (Component.GpioId != Guid.Empty) {
+        if (Component.GpioId != Guid.Empty)
+        {
             Component.Gpio = (InputGpio?)ComponentService.GetInstanceById(Component.GpioId);
             if (Component.Gpio is not null)
             {

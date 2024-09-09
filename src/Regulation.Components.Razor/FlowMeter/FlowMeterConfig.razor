@@ -4,6 +4,7 @@
 @using MudBlazor
 @using System.ComponentModel
 @inject IComponentService ComponentService
+@inject IDialogService DialogService
 @namespace Regulation.Components
 @attribute [ViewOf("FlowMeter Configuration", typeof(FlowMeter), typeof(FlowMeterConfig), ViewContext.Configuration)]
 
@@ -13,10 +14,66 @@
         <MudSelectItem Value="@gpio">@gpio.InstanceName</MudSelectItem>
     }
 </MudSelect>
+<MudTooltip Text="value read on physical meter">
+    <MudTextField Style="width:100%" Label="Initial value" T="int" @bind-Value="Component.InitialValue" />
+</MudTooltip>
+
+<MudGrid>
+    <MudItem xs="6">
+        <MudSwitch T="bool" Label="Enable manualy" @bind-value="Component.Enable" />
+    </MudItem>
+    <MudItem xs="6">
+        <MudChip T="bool" Color=@(Component.Enable ? Color.Success : Color.Default) Text=@(Component.Enable ? "Enabled" : "Disabled") />
+    </MudItem>
+
+    <MudItem xs="6">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ShowResetCurrentCountDialog">Reset current count</MudButton>
+    </MudItem>
+    <MudItem xs="6">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ShowResetTotalCountDialog">Reset total count</MudButton>
+    </MudItem>
+</MudGrid>
+
 
 
 @code {
     private List<InputGpio> _gpios => ComponentService.GetInstancesOfType<InputGpio>().ToList();
 
     [Parameter] public FlowMeter Component { get; set; } = null!;
+
+    private void ResetCurrentCount()
+    {
+        Component.ResetCurrentValue();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ResetTotalCount()
+    {
+        Component.ResetTotalValue();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ShowResetCurrentCountDialog()
+    {
+        var options = new DialogOptions() { CloseOnEscapeKey = true };
+        var dialog = DialogService.Show<FlowMeterDialog>("Confirm Reset current count", options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            ResetCurrentCount();
+        }
+    }
+
+    private async Task ShowResetTotalCountDialog()
+    {
+        var options = new DialogOptions() { CloseOnEscapeKey = true };
+        var dialog = DialogService.Show<FlowMeterDialog>("Confirm Reset total count", options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            ResetTotalCount();
+        }
+    }
 }
