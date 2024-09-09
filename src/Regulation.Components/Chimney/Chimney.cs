@@ -1,6 +1,5 @@
 ﻿// Copyright © 2024 Lionk Project
 
-using System.Data;
 using Lionk.Core;
 using Lionk.Core.Component;
 using Lionk.Core.DataModel;
@@ -226,6 +225,9 @@ public class Chimney : BaseComponent
     private void DefineState()
     {
         double currentTemperature = GetTemperature();
+        double inputTemperature = GetInputTemp();
+        double outputTemperature = GetOutputTemp();
+
         if (currentTemperature is double.NaN)
         {
             State = ChimneyState.Error;
@@ -255,17 +257,25 @@ public class Chimney : BaseComponent
             {
                 double historyAverage = _temperatureHistory.Average();
                 double averageDelta = currentTemperature - historyAverage;
-                if (averageDelta > 0.5)
+                if (outputTemperature is double.NaN || inputTemperature is double.NaN)
                 {
-                    State = ChimneyState.HeatingUp;
-                }
-                else if (averageDelta < -0.5)
-                {
-                    State = ChimneyState.HeatingDown;
+                    State = ChimneyState.Undefined;
+                    return;
                 }
                 else
                 {
-                    State = ChimneyState.Stabilized;
+                    if (averageDelta > 0.5)
+                    {
+                        State = ChimneyState.HeatingUp;
+                    }
+                    else if (averageDelta < -0.5)
+                    {
+                        State = ChimneyState.HeatingDown;
+                    }
+                    else
+                    {
+                        State = ChimneyState.Stabilized;
+                    }
                 }
             }
         }
@@ -310,7 +320,12 @@ public class Chimney : BaseComponent
     /// <returns> The output temperature. </returns>
     public double GetInputTemp()
     {
-        if (InputSensor is null) return double.NaN;
+        if (InputSensor is null || InputSensor.IsInError)
+        {
+            InputSensor?.Reset();
+            return double.NaN;
+        }
+
         return InputSensor.GetTemperature();
     }
 
@@ -320,7 +335,14 @@ public class Chimney : BaseComponent
     /// <returns> The output temperature. </returns>
     public double GetOutputTemp()
     {
-        if (OutputSensor is null) return double.NaN;
+        if (OutputSensor is null || OutputSensor.IsInError)
+        {
+            {
+                OutputSensor?.Reset();
+                return double.NaN;
+            }
+        }
+
         return OutputSensor.GetTemperature();
     }
 
@@ -337,10 +359,11 @@ public class Chimney : BaseComponent
             return;
         }
 
-        if (State is ChimneyState.AtFullPower or ChimneyState.Error)
+        if (State is ChimneyState.AtFullPower or ChimneyState.Error or ChimneyState.Undefined)
         {
             speed = 1;
             if (State is ChimneyState.Error) Console.WriteLine("Chimney is in Error");
+            if (State is ChimneyState.Undefined) Console.WriteLine("Chimney is in Undefined state");
         }
 
         if (speed > 1)
