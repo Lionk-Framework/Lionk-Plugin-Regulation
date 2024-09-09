@@ -18,15 +18,14 @@ public class Chimney : BaseComponent
     #region Public Events
 
     /// <summary>
-    /// Event raised when the state of the chimney changes.
-    /// </summary>
-    public event EventHandler? StateChanged;
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="Chimney"/> class.
     /// </summary>
     public Chimney() => StateChanged += OnStateChanged;
 
+    /// <summary>
+    /// Event raised when the state of the chimney changes.
+    /// </summary>
+    public event EventHandler? StateChanged;
     #endregion Public Events
 
     #region Private Fields
@@ -96,6 +95,7 @@ public class Chimney : BaseComponent
             _chimneySensorPower.NewValueAvailable += OnSensorPowerChanged;
         }
     }
+
     /// <summary>
     /// Gets or sets the considered fire threshold.
     /// </summary>
@@ -130,6 +130,7 @@ public class Chimney : BaseComponent
         get => _flowMeterId;
         set => SetField(ref _flowMeterId, value);
     }
+
     /// <summary>
     /// Gets or sets the input temperature.
     /// </summary>
@@ -222,6 +223,7 @@ public class Chimney : BaseComponent
     /// Gets the reset counter.
     /// </summary>
     public int ResetCount => _resetCount;
+
     /// <summary>
     /// Gets the minimum temperature.
     /// </summary>
