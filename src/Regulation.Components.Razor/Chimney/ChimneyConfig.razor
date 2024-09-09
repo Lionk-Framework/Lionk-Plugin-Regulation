@@ -50,11 +50,12 @@
     }
 </MudSelect>
 
-<MudButton OnClick="ResetTotalResetCountClicked">Reset error counter</MudButton>
 
-<MudTooltip Text="The flow meter calibration factor is used to convert the flow meter pulses to liters per minute">
-    <MudTextField Label="Chimney Sensor reset threshold" @bind-Value="Component.MaxResetCount" Variant="Variant.Filled" />
+<MudTooltip Style="width:100%" Text="The max error count that set the pump to max speed if reached">
+    <MudTextField Style="width:100%" Label="Chimney Sensor reset threshold" @bind-Value="Component.MaxResetCount" Variant="Variant.Filled" />
 </MudTooltip>
+
+<MudButton Style="width:100%" OnClick="ResetTotalResetCountClicked" Variant="Variant.Filled">Reset error counter</MudButton>
 
 @code {
     [Parameter] public Chimney Component { get; set; } = null!;
