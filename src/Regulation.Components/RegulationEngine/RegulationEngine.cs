@@ -166,11 +166,12 @@ public class RegulationEngine : BaseCyclicComponent
         double chimneyTemperature = Chimney.GetTemperature();
         double outputTemperature = Chimney.GetOutputTemp();
         double inputTemperature = Chimney.GetInputTemp();
+        double accumulator2BottomSensor = Accumulator2?.BottomSensor?.GetTemperature() ?? 0;
 
         if (inputTemperature is double.NaN) inputTemperature = Accumulator2?.BottomSensor?.GetTemperature() ?? 0;
 
         if (chimneyTemperature < ChimneyStartTemperature
-            || inputTemperature + 5 > chimneyTemperature)
+            || accumulator2BottomSensor + 5 > chimneyTemperature)
         {
             Chimney.SetPumpSpeed(0);
         }

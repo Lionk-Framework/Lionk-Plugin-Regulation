@@ -326,7 +326,7 @@ public class Chimney : BaseComponent
 
     private void OnStateChanged(object? sender, EventArgs e)
     {
-        if (FlowMeter is not null) FlowMeter.Enable = State is not ChimneyState.Off;
+        // Do nothing
     }
     #endregion Private Methods
 
@@ -471,6 +471,8 @@ public class Chimney : BaseComponent
 
         Pump.Speed = speed;
         Pump.Execute();
+
+        if (FlowMeter is not null) FlowMeter.Enable = speed > 0;
     }
     #endregion Public Methods
 }
