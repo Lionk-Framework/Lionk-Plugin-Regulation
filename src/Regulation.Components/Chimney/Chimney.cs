@@ -30,7 +30,7 @@ public class Chimney : BaseComponent
     #endregion Public Events
 
     #region Private Fields
-    private const int MaxHistorySize = 5;
+    private const int MaxHistorySize = 10;
     private const int SpecificHeatCapacity = 4180;
     private readonly Queue<double> _temperatureHistory = new();
     private readonly IStandardLogger? _logger = LogService.CreateLogger("ChimneyLogs");
@@ -280,11 +280,11 @@ public class Chimney : BaseComponent
                     {
                         State = ChimneyState.HeatingUp;
                     }
-                    else if (averageDelta < -0.1)
+                    else if (averageDelta < 0)
                     {
                         State = ChimneyState.HeatingDown;
                     }
-                    else
+                    else if (averageDelta >= 0 && averageDelta <= 0.5 && oldState is not ChimneyState.HeatingDown)
                     {
                         State = ChimneyState.Stabilized;
                     }
