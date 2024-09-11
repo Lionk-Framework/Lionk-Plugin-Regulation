@@ -17,18 +17,19 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
 {
     #region Private Fields
 
+    // Tolerance to avoid multiple events in ms
     private const int _raisedEventTolerance = 500;
     private const int NbMeasuresToComputeFlow = 10;
     private const string Unit = "l";
     private readonly Queue<(DateTime Time, int Value)> _lastMeasurements = new();
-
     private BaseGpioController? _controller;
 
     private InputGpio? _gpio;
 
-    // Tolerance to avoid multiple events in ms
     private Guid _gpioId;
     private DateTime _lastMeasureTime = DateTime.MinValue;
+    private int _initialValue = 0;
+    private int _totalValue = 0;
 
     #endregion Private Fields
 
@@ -46,7 +47,14 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
     /// <summary>
     /// Gets or sets the value.
     /// </summary>
+    [JsonIgnore]
     public int CurrentValue { get; set; } = 0;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the component is enabled.
+    /// </summary>
+    [JsonIgnore]
+    public bool Enable { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the gpio.
@@ -80,7 +88,20 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
     /// <summary>
     /// Gets or sets the initial value.
     /// </summary>
-    public int InitialValue { get; set; } = 0;
+    public int InitialValue
+    {
+        get => _initialValue;
+        set => SetField(ref _initialValue, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the total value.
+    /// </summary>
+    public int TotalValue
+    {
+        get => _totalValue;
+        set => SetField(ref _totalValue, value);
+    }
 
     /// <summary>
     /// Gets the measures of the GPIO component.
@@ -96,10 +117,11 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
 
     private void OnPinValueChanged(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
     {
-        if (_lastMeasureTime.AddMilliseconds(_raisedEventTolerance) > DateTime.UtcNow) return;
+        if (!Enable || _lastMeasureTime.AddMilliseconds(_raisedEventTolerance) > DateTime.UtcNow) return;
         _lastMeasureTime = DateTime.UtcNow;
         _lastMeasureTime = DateTime.UtcNow;
         CurrentValue++;
+        TotalValue++;
         Measure();
     }
 
@@ -114,7 +136,7 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
     /// <returns> The average flow rate in L/s. </returns>
     public double GetAverageFlowRateLps(int nbDecimal = 2)
     {
-        if (_lastMeasurements.Count > 1)
+        if (Enable && _lastMeasurements.Count > 1)
         {
             (DateTime Time, int Value) first = _lastMeasurements.First();
             (DateTime Time, int Value) last = _lastMeasurements.Last();
@@ -137,13 +159,25 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
     /// Method to get the value.
     /// </summary>
     /// <returns> The value. </returns>
-    public int GetValue() => InitialValue + CurrentValue;
+    public int GetValue() => CurrentValue;
 
     /// <summary>
     /// Method to get the value as a string.
     /// </summary>
     /// <returns> The value as a string. </returns>
-    public string GetValueString() => GetValue() + Unit;
+    public string GetValueString() => GetValue() + " " + Unit;
+
+    /// <summary>
+    /// Method to get the total value as a string.
+    /// </summary>
+    /// <returns> The total value as a string. </returns>
+    public string GetTotalValueString() => TotalValue + " " + Unit;
+
+    /// <summary>
+    /// Method to get the total value with the initial value as a string.
+    /// </summary>
+    /// <returns> The total value with the initial value as a string. </returns>
+    public string GetTotalWithInitialValueString() => (TotalValue + InitialValue) + " " + Unit;
 
     /// <summary>
     /// Method to get the value.
@@ -173,6 +207,21 @@ public class FlowMeter : BaseComponent, IMeasurableComponent<int>
             }
         }
     }
+
+    /// <summary>
+    /// This method is used to reset the current value.
+    /// </summary>
+    public void ResetCurrentValue()
+    {
+        CurrentValue = 0;
+        Measure();
+        _lastMeasurements.Clear();
+    }
+
+    /// <summary>
+    /// This method is used to reset the total value.
+    /// </summary>
+    public void ResetTotalValue() => TotalValue = CurrentValue;
 
     #endregion Public Methods
 }

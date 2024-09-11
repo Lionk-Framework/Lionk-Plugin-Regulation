@@ -3,6 +3,7 @@
 using Lionk.Core;
 using Lionk.Core.Component;
 using Lionk.Core.DataModel;
+using Lionk.Log;
 using Lionk.Rpi.Gpio;
 using Lionk.TemperatureSensor;
 using Newtonsoft.Json;
@@ -15,10 +16,24 @@ namespace Regulation.Components;
 [NamedElement("Chimney", "This component is used to represent a chimney.")]
 public class Chimney : BaseComponent
 {
+    #region Public Events
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Chimney"/> class.
+    /// </summary>
+    public Chimney() => StateChanged += OnStateChanged;
+
+    /// <summary>
+    /// Event raised when the state of the chimney changes.
+    /// </summary>
+    public event EventHandler? StateChanged;
+    #endregion Public Events
+
     #region Private Fields
     private const int MaxHistorySize = 5;
     private const int SpecificHeatCapacity = 4180;
     private readonly Queue<double> _temperatureHistory = new();
+    private readonly IStandardLogger? _logger = LogService.CreateLogger("ChimneyLogs");
 
     private BaseTemperatureSensor? _chimneySensor;
     private Guid _chimneySensorId;
@@ -28,12 +43,11 @@ public class Chimney : BaseComponent
     private Guid _flowMeterId;
     private BaseTemperatureSensor? _inputSensor;
     private Guid _inputSensorId;
+    private int _maxResetCount = 10;
     private BaseTemperatureSensor? _outputSensor;
     private Guid _outputSensorId;
     private Pump? _pump;
     private Guid _pumpId;
-
-    private int _maxResetCount = 10;
     private int _resetCount = 0;
     private int _totalResetCount = 0;
 
@@ -58,6 +72,15 @@ public class Chimney : BaseComponent
     }
 
     /// <summary>
+    /// Gets or sets the input temperature sensor id.
+    /// </summary>
+    public Guid ChimneySensorId
+    {
+        get => _chimneySensorId;
+        set => SetField(ref _chimneySensorId, value);
+    }
+
+    /// <summary>
     /// Gets or sets the chimney sensor power.
     /// </summary>
     [JsonIgnore]
@@ -76,18 +99,14 @@ public class Chimney : BaseComponent
     }
 
     /// <summary>
-    /// Gets or sets the input temperature sensor id.
-    /// </summary>
-    public Guid ChimneySensorId
-    {
-        get => _chimneySensorId;
-        set => SetField(ref _chimneySensorId, value);
-    }
-
-    /// <summary>
     /// Gets or sets the considered fire threshold.
     /// </summary>
     public double ConsideredFireThreshold { get; set; } = 30;
+
+    /// <summary>
+    /// Gets the current power of the chimney.
+    /// </summary>
+    public double CurrentPower { get; private set; }
 
     /// <summary>
     /// Gets or sets the flow meter.
@@ -115,11 +134,6 @@ public class Chimney : BaseComponent
     }
 
     /// <summary>
-    /// Gets the current power of the chimney.
-    /// </summary>
-    public double CurrentPower { get; private set; }
-
-    /// <summary>
     /// Gets or sets the input temperature.
     /// </summary>
     [JsonIgnore]
@@ -142,6 +156,15 @@ public class Chimney : BaseComponent
     {
         get => _inputSensorId;
         set => SetField(ref _inputSensorId, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the maximum reset count.
+    /// </summary>
+    public int MaxResetCount
+    {
+        get => _maxResetCount;
+        set => SetField(ref _maxResetCount, value);
     }
 
     /// <summary>
@@ -204,15 +227,6 @@ public class Chimney : BaseComponent
     public int ResetCount => _resetCount;
 
     /// <summary>
-    /// Gets or sets the maximum reset count.
-    /// </summary>
-    public int MaxResetCount
-    {
-        get => _maxResetCount;
-        set => SetField(ref _maxResetCount, value);
-    }
-
-    /// <summary>
     /// Gets the minimum temperature.
     /// </summary>
     [JsonIgnore]
@@ -227,23 +241,22 @@ public class Chimney : BaseComponent
         double currentTemperature = GetTemperature();
         double inputTemperature = GetInputTemp();
         double outputTemperature = GetOutputTemp();
+        ChimneyState oldState = State;
 
         if (currentTemperature is double.NaN)
         {
             State = ChimneyState.Error;
-            return;
+            _logger?.Log(LogSeverity.Error, "Chimney sensor is in error");
         }
         else if (currentTemperature > MaxTemperature)
         {
             _temperatureHistory.Enqueue(currentTemperature);
             State = ChimneyState.AtFullPower;
-            return;
         }
         else if (currentTemperature < ConsideredFireThreshold)
         {
             _temperatureHistory.Enqueue(currentTemperature);
             State = ChimneyState.Off;
-            return;
         }
         else
         {
@@ -260,7 +273,6 @@ public class Chimney : BaseComponent
                 if (outputTemperature is double.NaN || inputTemperature is double.NaN)
                 {
                     State = ChimneyState.Undefined;
-                    return;
                 }
                 else
                 {
@@ -268,7 +280,7 @@ public class Chimney : BaseComponent
                     {
                         State = ChimneyState.HeatingUp;
                     }
-                    else if (averageDelta < -0.5)
+                    else if (averageDelta < -0.1)
                     {
                         State = ChimneyState.HeatingDown;
                     }
@@ -278,6 +290,11 @@ public class Chimney : BaseComponent
                     }
                 }
             }
+        }
+
+        if (oldState != State)
+        {
+            StateChanged?.Invoke(this, new EventArgs());
         }
     }
 
@@ -289,11 +306,12 @@ public class Chimney : BaseComponent
         if (State is ChimneyState.Off && (Pump is null || !Pump.CanExecute))
         {
             // TODO Notification info
-            Console.WriteLine("Pump is not available - Info");
+            _logger?.Log(LogSeverity.Information, "Pump is not available");
         }
         else if (Pump is null || !Pump.CanExecute)
         {
             // TODO Notification High severitiy
+            _logger?.Log(LogSeverity.Warning, "Pump is not available");
             Console.WriteLine("Pump is not available - High Severity");
         }
         else if (State is ChimneyState.Error or ChimneyState.AtFullPower)
@@ -310,9 +328,45 @@ public class Chimney : BaseComponent
         // do nothing
     }
 
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        // Do nothing
+    }
     #endregion Private Methods
 
     #region Public Methods
+
+    /// <summary>
+    /// Methode to calculate the power of the chimney.
+    /// </summary>
+    /// <returns> The power of the chimney. </returns>
+    public double CalculatePower()
+    {
+        if (FlowMeter is null || InputSensor is null || OutputSensor is null)
+            return 0;
+
+        double flowRateInLiterPerSecond = FlowMeter.GetAverageFlowRateLps();
+
+        double tempDifference = GetOutputTemp() - GetInputTemp();
+
+        double power = flowRateInLiterPerSecond * SpecificHeatCapacity * tempDifference;
+
+        return Math.Round(power, 1);
+    }
+
+    /// <summary>
+    /// Gets the power of the chimney as a string.
+    /// </summary>
+    /// <returns> The power of the chimney as a string. </returns>
+    /// <remarks> If the pump is off or the input temperature is higher than the output temperature, the method returns "-". </remarks>
+    public string GetCurrentPowerString()
+    {
+        if (Pump is null
+            || Pump.Speed == 0
+            || GetInputTemp() > GetOutputTemp()) return "-";
+
+        return CurrentPower.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', ' ') + " W";
+    }
 
     /// <summary>
     /// Methode to get the output temperature.
@@ -347,57 +401,6 @@ public class Chimney : BaseComponent
     }
 
     /// <summary>
-    /// Methode to set the pump speed.
-    /// </summary>
-    /// <param name="speed"> The speed of the pump between 0 and 1. </param>
-    public void SetPumpSpeed(double speed)
-    {
-        if (Pump is null || !Pump.CanExecute)
-        {
-            // TODO Notification
-            Console.WriteLine("Pump is not available");
-            return;
-        }
-
-        if (State is ChimneyState.AtFullPower or ChimneyState.Error or ChimneyState.Undefined)
-        {
-            speed = 1;
-            if (State is ChimneyState.Error) Console.WriteLine("Chimney is in Error");
-            if (State is ChimneyState.Undefined) Console.WriteLine("Chimney is in Undefined state");
-        }
-
-        if (speed > 1)
-        {
-            speed = 1;
-        }
-        else if (speed < 0)
-        {
-            speed = 0;
-        }
-
-        Pump.Speed = speed;
-        Pump.Execute();
-    }
-
-    /// <summary>
-    /// Methode to calculate the power of the chimney.
-    /// </summary>
-    /// <returns> The power of the chimney. </returns>
-    public double CalculatePower()
-    {
-        if (FlowMeter is null || InputSensor is null || OutputSensor is null)
-            return 0;
-
-        double flowRateInLiterPerSecond = FlowMeter.GetAverageFlowRateLps();
-
-        double tempDifference = GetOutputTemp() - GetInputTemp();
-
-        double power = flowRateInLiterPerSecond * SpecificHeatCapacity * tempDifference;
-
-        return Math.Round(power, 1);
-    }
-
-    /// <summary>
     /// Gets the temperature of the chimney.
     /// </summary>
     /// <returns> The temperature of the chimney. </returns>
@@ -421,20 +424,6 @@ public class Chimney : BaseComponent
     }
 
     /// <summary>
-    /// Gets the power of the chimney as a string.
-    /// </summary>
-    /// <returns> The power of the chimney as a string. </returns>
-    /// <remarks> If the pump is off or the input temperature is higher than the output temperature, the method returns "-". </remarks>
-    public string GetCurrentPowerString()
-    {
-        if (Pump is null
-            || Pump.Speed == 0
-            || GetInputTemp() > GetOutputTemp()) return "-";
-
-        return CurrentPower.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', ' ') + " W";
-    }
-
-    /// <summary>
     /// Resets the chimney sensor by turning it off and on and reseting the sensor if is in error.
     /// </summary>
     public void ResetChimneySensor()
@@ -448,6 +437,7 @@ public class Chimney : BaseComponent
         ChimneySensorPower.PinValue = 1;
         ChimneySensorPower.Execute();
         if (ChimneySensor is not null && ChimneySensor.IsInError) ChimneySensor.Reset();
+        _logger?.Log(LogSeverity.Information, $"Chimney sensor has been reset current count: {_resetCount} - total count {_totalResetCount}");
     }
 
     /// <summary>
@@ -455,5 +445,49 @@ public class Chimney : BaseComponent
     /// </summary>
     public void ResetTotalResetCount() => _totalResetCount = 0;
 
+    /// <summary>
+    /// Methode to set the pump speed.
+    /// </summary>
+    /// <param name="speed"> The speed of the pump between 0 and 1. </param>
+    public void SetPumpSpeed(double speed)
+    {
+        if (Pump is null || !Pump.CanExecute)
+        {
+            // TODO Notification
+            Console.WriteLine("Pump is not available or can't be executed");
+            _logger?.Log(LogSeverity.Warning, "Pump is not available or can't be executed");
+            return;
+        }
+
+        if (State is ChimneyState.AtFullPower or ChimneyState.Error or ChimneyState.Undefined)
+        {
+            speed = 1;
+            if (State is ChimneyState.Error)
+            {
+                Console.WriteLine("Chimney is in Error");
+                _logger?.Log(LogSeverity.Error, "Chimney is in Error");
+            }
+
+            if (State is ChimneyState.Undefined)
+            {
+                _logger?.Log(LogSeverity.Warning, "Chimney is in Undefined state");
+                Console.WriteLine("Chimney is in Undefined state");
+            }
+        }
+
+        if (speed > 1)
+        {
+            speed = 1;
+        }
+        else if (speed < 0)
+        {
+            speed = 0;
+        }
+
+        Pump.Speed = speed;
+        Pump.Execute();
+
+        if (FlowMeter is not null) FlowMeter.Enable = speed > 0;
+    }
     #endregion Public Methods
 }
