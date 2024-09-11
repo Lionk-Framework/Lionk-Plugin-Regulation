@@ -175,15 +175,17 @@ public class RegulationEngine : BaseCyclicComponent
         {
             Chimney.SetPumpSpeed(0);
         }
-
-        if (Chimney.State is ChimneyState.HeatingDown)
+        else
         {
-            Chimney.SetPumpSpeed(1);
-        }
-        else if (Chimney.State is ChimneyState.HeatingUp)
-        {
-            double pumpSpeed = (double)(chimneyTemperature - Chimney.ConsideredFireThreshold) / (Chimney.MaxTemperature - Chimney.ConsideredFireThreshold);
-            Chimney.SetPumpSpeed(pumpSpeed);
+            if (Chimney.State is ChimneyState.HeatingDown)
+            {
+                Chimney.SetPumpSpeed(1);
+            }
+            else if (Chimney.State is ChimneyState.HeatingUp)
+            {
+                double pumpSpeed = (double)(chimneyTemperature - Chimney.ConsideredFireThreshold) / (Chimney.MaxTemperature - Chimney.ConsideredFireThreshold);
+                Chimney.SetPumpSpeed(pumpSpeed);
+            }
         }
     }
 
