@@ -37,17 +37,23 @@ public class Chimney : BaseComponent
 
     private BaseTemperatureSensor? _chimneySensor;
     private Guid _chimneySensorId;
+
     private OutputGpio? _chimneySensorPower;
     private Guid _chimneySensorPowerId;
+
     private FlowMeter? _flowMeter;
     private Guid _flowMeterId;
+
     private BaseTemperatureSensor? _inputSensor;
     private Guid _inputSensorId;
-    private int _maxResetCount = 10;
+
     private BaseTemperatureSensor? _outputSensor;
     private Guid _outputSensorId;
+
     private Pump? _pump;
     private Guid _pumpId;
+
+    private int _maxResetCount = 10;
     private int _resetCount = 0;
     private int _totalResetCount = 0;
 
@@ -91,11 +97,20 @@ public class Chimney : BaseComponent
         {
             _chimneySensorPower = value;
             if (_chimneySensorPower is null) return;
-            _chimneySensorPowerId = _chimneySensorPower.Id;
+            ChimneySensorPowerId = _chimneySensorPower.Id;
             _chimneySensorPower.PinValue = 1;
             _chimneySensorPower.Execute();
             _chimneySensorPower.NewValueAvailable += OnSensorPowerChanged;
         }
+    }
+
+    /// <summary>
+    /// Gets or sets the chimney sensor power id.
+    /// </summary>
+    public Guid ChimneySensorPowerId
+    {
+        get => _chimneySensorPowerId;
+        set => SetField(ref _chimneySensorPowerId, value);
     }
 
     /// <summary>
@@ -106,6 +121,7 @@ public class Chimney : BaseComponent
     /// <summary>
     /// Gets the current power of the chimney.
     /// </summary>
+    [JsonIgnore]
     public double CurrentPower { get; private set; }
 
     /// <summary>
