@@ -1,5 +1,6 @@
 ﻿@using Lionk.Core.Component
 @using Lionk.Core.View
+@using Lionk.Rpi.Gpio
 @using Lionk.TemperatureSensor
 @using MudBlazor
 @using System.ComponentModel
@@ -8,44 +9,59 @@
 @attribute [ViewOf("Chimney configuration", typeof(Chimney), typeof(ChimneyConfig), ViewContext.Configuration)]
 
 <MudSelect Label="Chimney sensor" @bind-Value="Component.ChimneySensor" Variant="Variant.Filled">
-    @foreach (var sensor in _temperatureSensors)
+    @foreach (BaseTemperatureSensor sensor in _temperatureSensors)
     {
         <MudSelectItem Value="@sensor">@sensor.InstanceName</MudSelectItem>
     }
 </MudSelect>
 
+<MudSelect Label="Chimney sensor power GPIO" @bind-Value="Component.ChimneySensorPower" Variant="Variant.Filled">
+    @foreach (OutputGpio outputGpio in _outputGpios)
+    {
+        <MudSelectItem Value="@outputGpio">@outputGpio.InstanceName</MudSelectItem>
+    }
+</MudSelect>
+
 <MudSelect Label="Input sensor" @bind-Value="Component.InputSensor" Variant="Variant.Filled">
-    @foreach (var sensor in _temperatureSensors)
+    @foreach (BaseTemperatureSensor sensor in _temperatureSensors)
     {
         <MudSelectItem Value="@sensor">@sensor.InstanceName</MudSelectItem>
     }
 </MudSelect>
 
 <MudSelect Label="Output sensor" @bind-Value="Component.OutputSensor" Variant="Variant.Filled">
-    @foreach (var sensor in _temperatureSensors)
+    @foreach (BaseTemperatureSensor sensor in _temperatureSensors)
     {
         <MudSelectItem Value="@sensor">@sensor.InstanceName</MudSelectItem>
     }
 </MudSelect>
 
 <MudSelect Label="Pump" @bind-Value="Component.Pump" Variant="Variant.Filled">
-    @foreach (var pump in _pumps)
+    @foreach (Pump pump in _pumps)
     {
         <MudSelectItem Value="@pump">@pump.InstanceName</MudSelectItem>
     }
 </MudSelect>
 
 <MudSelect Label="Flow Meter" @bind-Value="Component.FlowMeter" Variant="Variant.Filled">
-    @foreach (var flowMeter in _flowMeters)
+    @foreach (FlowMeter flowMeter in _flowMeters)
     {
         <MudSelectItem Value="flowMeter">@flowMeter.InstanceName</MudSelectItem>
     }
 </MudSelect>
 
+
+<MudTooltip Style="width:100%" Text="The max error count that set the pump to max speed if reached">
+    <MudTextField Style="width:100%" Label="Chimney Sensor reset threshold" @bind-Value="Component.MaxResetCount" Variant="Variant.Filled" />
+</MudTooltip>
+
+<MudButton Style="width:100%" OnClick="ResetTotalResetCountClicked" Variant="Variant.Filled">Reset error counter</MudButton>
+
 @code {
     [Parameter] public Chimney Component { get; set; } = null!;
 
     private List<BaseTemperatureSensor> _temperatureSensors = new List<BaseTemperatureSensor>();
+    private List<OutputGpio> _outputGpios = new List<OutputGpio>();
     private List<Pump> _pumps = new List<Pump>();
     private List<FlowMeter> _flowMeters = new();
 
@@ -54,7 +70,14 @@
         if (Component is null) throw new ArgumentException("Component must be set");
         base.OnInitialized();
         _temperatureSensors = ComponentService.GetInstancesOfType<BaseTemperatureSensor>().ToList();
+        _outputGpios = ComponentService.GetInstancesOfType<OutputGpio>().ToList();
         _pumps = ComponentService.GetInstancesOfType<Pump>().ToList();
         _flowMeters = ComponentService.GetInstancesOfType<FlowMeter>().ToList();
+    }
+
+    private void ResetTotalResetCountClicked()
+    {
+        Component.ResetTotalResetCount();
+        InvokeAsync(StateHasChanged);
     }
 }

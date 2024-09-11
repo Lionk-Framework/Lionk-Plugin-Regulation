@@ -36,4 +36,9 @@ public enum ChimneyState
     /// The fireplace is stabilized, producing a constant amount of heat.
     /// </summary>
     Stabilized,
+
+    /// <summary>
+    /// If the input or output temperature is not valid.
+    /// </summary>
+    Undefined,
 }

@@ -1,0 +1,67 @@
+﻿@using Lionk.Core.Component
+@using Lionk.Core.View
+@using Lionk.Rpi.Gpio
+@using MudBlazor
+@using System.ComponentModel
+@inject IComponentService ComponentService
+@namespace Regulation.Components
+@attribute [ViewOf("FlowMeter detail", typeof(FlowMeter), typeof(FlowMeterDetail), ViewContext.Detail)]
+
+<MudGrid>
+    <MudItem xs="6">
+        <MudText Typo="Typo.body1">Current value</MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText>@Component.GetValueString()</MudText>
+    </MudItem>
+
+    <MudItem xs="6">
+        <MudText Typo="Typo.body1"> Total count </MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText>@Component.GetTotalValueString()</MudText>
+    </MudItem>
+
+    <MudItem xs="6">
+        <MudText Typo="Typo.body1"> Initial count </MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText>@Component.InitialValue</MudText>
+    </MudItem>
+
+    <MudItem xs="6">
+        <MudText Typo="Typo.body1"> Total with inital count </MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText>@Component.GetTotalWithInitialValueString()</MudText>
+    </MudItem>
+
+
+
+
+    <MudItem xs="6">
+        <MudText Typo="Typo.body1">Current flow in [l/s]</MudText>
+    </MudItem>
+
+    <MudItem xs="6">
+        <MudText>@Component.GetAverageFlowRateLps()</MudText>
+    </MudItem>
+
+    <MudItem xs="6">
+        <MudText Typo="Typo.body1">Current flow in [m³/h]</MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText>@Component.GetAverageFlowRateM3ph()</MudText>
+    </MudItem>
+
+</MudGrid>
+
+@code {
+    [Parameter] public FlowMeter Component { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        if (Component is null) throw new ArgumentException("Component must be set");
+    }
+
+}
