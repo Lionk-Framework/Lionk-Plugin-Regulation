@@ -284,7 +284,7 @@ public class Chimney : BaseComponent
                     {
                         State = ChimneyState.HeatingDown;
                     }
-                    else
+                    else if (averageDelta >= 0 && averageDelta <= 0.5 && oldState is not ChimneyState.HeatingDown)
                     {
                         State = ChimneyState.Stabilized;
                     }
