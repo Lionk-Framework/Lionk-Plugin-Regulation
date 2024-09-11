@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Lionk.Core" Version="2.0.0" />
+    <PackageReference Include="Lionk.Logger" Version="1.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 

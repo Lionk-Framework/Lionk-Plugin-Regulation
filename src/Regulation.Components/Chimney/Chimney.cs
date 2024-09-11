@@ -3,6 +3,7 @@
 using Lionk.Core;
 using Lionk.Core.Component;
 using Lionk.Core.DataModel;
+using Lionk.Log;
 using Lionk.Rpi.Gpio;
 using Lionk.TemperatureSensor;
 using Newtonsoft.Json;
@@ -32,6 +33,7 @@ public class Chimney : BaseComponent
     private const int MaxHistorySize = 5;
     private const int SpecificHeatCapacity = 4180;
     private readonly Queue<double> _temperatureHistory = new();
+    private readonly IStandardLogger? _logger = LogService.CreateLogger("ChimneyLogs");
 
     private BaseTemperatureSensor? _chimneySensor;
     private Guid _chimneySensorId;
@@ -244,6 +246,7 @@ public class Chimney : BaseComponent
         if (currentTemperature is double.NaN)
         {
             State = ChimneyState.Error;
+            _logger?.Log(LogSeverity.Error, "Chimney sensor is in error");
         }
         else if (currentTemperature > MaxTemperature)
         {
@@ -277,7 +280,7 @@ public class Chimney : BaseComponent
                     {
                         State = ChimneyState.HeatingUp;
                     }
-                    else if (averageDelta < -0.5)
+                    else if (averageDelta < -0.1)
                     {
                         State = ChimneyState.HeatingDown;
                     }
@@ -303,11 +306,12 @@ public class Chimney : BaseComponent
         if (State is ChimneyState.Off && (Pump is null || !Pump.CanExecute))
         {
             // TODO Notification info
-            Console.WriteLine("Pump is not available - Info");
+            _logger?.Log(LogSeverity.Information, "Pump is not available");
         }
         else if (Pump is null || !Pump.CanExecute)
         {
             // TODO Notification High severitiy
+            _logger?.Log(LogSeverity.Warning, "Pump is not available");
             Console.WriteLine("Pump is not available - High Severity");
         }
         else if (State is ChimneyState.Error or ChimneyState.AtFullPower)
@@ -433,6 +437,7 @@ public class Chimney : BaseComponent
         ChimneySensorPower.PinValue = 1;
         ChimneySensorPower.Execute();
         if (ChimneySensor is not null && ChimneySensor.IsInError) ChimneySensor.Reset();
+        _logger?.Log(LogSeverity.Information, $"Chimney sensor has been reset current count: {_resetCount} - total count {_totalResetCount}");
     }
 
     /// <summary>
@@ -449,15 +454,25 @@ public class Chimney : BaseComponent
         if (Pump is null || !Pump.CanExecute)
         {
             // TODO Notification
-            Console.WriteLine("Pump is not available");
+            Console.WriteLine("Pump is not available or can't be executed");
+            _logger?.Log(LogSeverity.Warning, "Pump is not available or can't be executed");
             return;
         }
 
         if (State is ChimneyState.AtFullPower or ChimneyState.Error or ChimneyState.Undefined)
         {
             speed = 1;
-            if (State is ChimneyState.Error) Console.WriteLine("Chimney is in Error");
-            if (State is ChimneyState.Undefined) Console.WriteLine("Chimney is in Undefined state");
+            if (State is ChimneyState.Error)
+            {
+                Console.WriteLine("Chimney is in Error");
+                _logger?.Log(LogSeverity.Error, "Chimney is in Error");
+            }
+
+            if (State is ChimneyState.Undefined)
+            {
+                _logger?.Log(LogSeverity.Warning, "Chimney is in Undefined state");
+                Console.WriteLine("Chimney is in Undefined state");
+            }
         }
 
         if (speed > 1)
