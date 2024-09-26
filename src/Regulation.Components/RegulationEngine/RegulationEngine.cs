@@ -173,7 +173,7 @@ public class RegulationEngine : BaseCyclicComponent
         double outputTemperature = Chimney.GetOutputTemp();
         double accumulator2BottomSensor = Accumulator2?.BottomSensor?.GetTemperature() ?? 0;
 
-        if (chimneyTemperature < Chimney.ConsideredFireThreshold
+        if (chimneyTemperature < Chimney.MinTemperatureToStartPump
             || accumulator2BottomSensor + 5 > chimneyTemperature)
         {
             Chimney.SetPumpSpeed(0);
@@ -188,7 +188,7 @@ public class RegulationEngine : BaseCyclicComponent
             }
             else if (Chimney.State is ChimneyState.HeatingUp | Chimney.State is ChimneyState.Stabilized)
             {
-                double pumpSpeed = (double)(chimneyTemperature - Chimney.ConsideredFireThreshold) / (Chimney.MaxTemperature - Chimney.ConsideredFireThreshold);
+                double pumpSpeed = (double)(chimneyTemperature - Chimney.MinTemperatureToStartPump) / (Chimney.MaxTemperature - Chimney.MinTemperatureToStartPump);
                 Chimney.SetPumpSpeed(pumpSpeed);
                 _logger?.Log(LogSeverity.Information, $"Pump is set to {pumpSpeed * 100}% because chimney temperature is heating up or stabilized");
             }
