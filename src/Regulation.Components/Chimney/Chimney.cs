@@ -30,7 +30,6 @@ public class Chimney : BaseComponent
     #endregion Public Events
 
     #region Private Fields
-    private const int MaxHistorySize = 10;
     private const int SpecificHeatCapacity = 4180;
     private readonly Queue<double> _temperatureHistory = new();
     private readonly IStandardLogger? _logger = LogService.CreateLogger("ChimneyLogs");
@@ -56,6 +55,9 @@ public class Chimney : BaseComponent
     private int _maxResetCount = 10;
     private int _resetCount = 0;
     private int _totalResetCount = 0;
+    private double _consideredFireThreshold = 30;
+    private double _minTemperatureToStartPump = 45;
+    private int _maxHistorySize = 10;
 
     #endregion Private Fields
 
@@ -116,7 +118,20 @@ public class Chimney : BaseComponent
     /// <summary>
     /// Gets or sets the considered fire threshold.
     /// </summary>
-    public double ConsideredFireThreshold { get; set; } = 30;
+    public double ConsideredFireThreshold
+    {
+        get => _consideredFireThreshold;
+        set => SetField(ref _consideredFireThreshold, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the minimum temperature to start the pump.
+    /// </summary>
+    public double MinTemperatureToStartPump
+    {
+        get => _minTemperatureToStartPump;
+        set => SetField(ref _minTemperatureToStartPump, value);
+    }
 
     /// <summary>
     /// Gets the current power of the chimney.
@@ -187,6 +202,15 @@ public class Chimney : BaseComponent
     /// Gets or sets the maximum temperature.
     /// </summary>
     public double MaxTemperature { get; set; } = 85.0;
+
+    /// <summary>
+    /// Gets or sets the maximum history size.
+    /// </summary>
+    public int MaxHistorySize
+    {
+        get => _maxHistorySize;
+        set => SetField(ref _maxHistorySize, value);
+    }
 
     /// <summary>
     /// Gets or sets the ouput temperature.
