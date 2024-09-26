@@ -56,7 +56,8 @@ public class Chimney : BaseComponent
     private int _resetCount = 0;
     private int _totalResetCount = 0;
     private double _consideredFireThreshold = 30;
-    private double _minTemperatureToStartPump = 45;
+    private double _minTemperaturePumpThresold = 45;
+    private double _maxTemperaturePumpThresold = 85;
     private int _maxHistorySize = 10;
 
     #endregion Private Fields
@@ -97,7 +98,7 @@ public class Chimney : BaseComponent
         get => _chimneySensorPower;
         set
         {
-            _chimneySensorPower = value;
+            SetField(ref _chimneySensorPower, value);
             if (_chimneySensorPower is null) return;
             ChimneySensorPowerId = _chimneySensorPower.Id;
             _chimneySensorPower.PinValue = 1;
@@ -127,10 +128,19 @@ public class Chimney : BaseComponent
     /// <summary>
     /// Gets or sets the minimum temperature to start the pump.
     /// </summary>
-    public double MinTemperatureToStartPump
+    public double MinTemperaturePumpThresold
     {
-        get => _minTemperatureToStartPump;
-        set => SetField(ref _minTemperatureToStartPump, value);
+        get => _minTemperaturePumpThresold;
+        set => SetField(ref _minTemperaturePumpThresold, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the maximum temperature to start the pump.
+    /// </summary>
+    public double MaxTemperaturePumpThresold
+    {
+        get => _maxTemperaturePumpThresold;
+        set => SetField(ref _maxTemperaturePumpThresold, value);
     }
 
     /// <summary>

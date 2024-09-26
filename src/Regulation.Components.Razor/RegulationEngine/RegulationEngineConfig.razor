@@ -44,6 +44,10 @@
     }
 </MudSelect>
 
+<MudTooltip Text="The minimum speed of the pump">
+    <MudTextField Style="width:100%" Label="Minimum pump speed [%]" T="int" @bind-Value="Component.MinPumpSpeed" Variant="Variant.Filled" />
+</MudTooltip>
+
 @code {
     [Parameter] public RegulationEngine Component { get; set; } = null!;
 

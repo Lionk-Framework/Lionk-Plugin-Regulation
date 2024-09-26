@@ -51,15 +51,19 @@
 </MudSelect>
 
 <MudTooltip Text="The minumum temperature that the chimney must reach to start the pump">
-    <MudTextField Style="width:100%" Label="History size" T="double" @bind-Value="Component.MinTemperatureToStartPump" Variant="Variant.Filled" />
+    <MudTextField Style="width:100%" Label="Minimum temperature" T="double" @bind-Value="Component.MinTemperaturePumpThresold" Variant="Variant.Filled" />
 </MudTooltip>
 
-<MudTooltip Text="The minumum temperature that the chimney must reach to consider the chimney is On">
-    <MudTextField Style="width:100%" Label="History size" T="double" @bind-Value="Component.ConsideredFireThreshold" Variant="Variant.Filled" />
+<MudTooltip Text="The temperature that set the pump to max speed if reached">
+    <MudTextField Style="width:100%" Label="Maximum temperature" T="double" @bind-Value="Component.MaxTemperaturePumpThresold" Variant="Variant.Filled" />
+</MudTooltip>
+
+<MudTooltip Text="The miniumum temperature that the chimney must reach to consider the chimney is On">
+    <MudTextField Style="width:100%" Label="Chimney ON temperature" T="double" @bind-Value="Component.ConsideredFireThreshold" Variant="Variant.Filled" />
 </MudTooltip>
 
 <MudTooltip Text="The max error count that set the pump to max speed if reached">
-    <MudTextField Style="width:100%" Label="Chimney Sensor reset threshold" @bind-Value="Component.MaxResetCount" Variant="Variant.Filled" />
+    <MudTextField Style="width:100%" Label="Chimney Sensor reset threshold" T="int" @bind-Value="Component.MaxResetCount" Variant="Variant.Filled" />
 </MudTooltip>
 
 <MudTooltip Text="The number of measured values to define the state of the chimney">

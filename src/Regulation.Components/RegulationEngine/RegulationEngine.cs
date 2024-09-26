@@ -27,6 +27,7 @@ public class RegulationEngine : BaseCyclicComponent
     private Guid _chimneyId;
     private BaseTemperatureSensor? _hotWaterSensor;
     private Guid _hotWaterSensorId;
+    private int _minPumpSpeed = 30;
     private ThreeWayValve? _valve;
     private Guid _valveId;
     #endregion Private Fields
@@ -133,6 +134,15 @@ public class RegulationEngine : BaseCyclicComponent
     }
 
     /// <summary>
+    /// Gets or sets the minimum pump speed.
+    /// </summary>
+    public int MinPumpSpeed
+    {
+        get => _minPumpSpeed;
+        set => SetField(ref _minPumpSpeed, value);
+    }
+
+    /// <summary>
     /// Gets or sets the three way valve.
     /// </summary>
     [JsonIgnore]
@@ -158,6 +168,19 @@ public class RegulationEngine : BaseCyclicComponent
     #endregion Public Properties
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="RegulationEngine"/> class.
+    /// </summary>
+    public RegulationEngine() => Period = TimeSpan.FromSeconds(3);
+
+    /// <inheritdoc/>
+    protected override void OnExecute(CancellationToken cancellationToken)
+    {
+        if (!CanExecute) return;
+        ChimneyModulation();
+        ValveManagment();
+    }
+
+    /// <summary>
     /// Method to manage the Chimney modulation.
     /// </summary>
     private void ChimneyModulation()
@@ -172,8 +195,9 @@ public class RegulationEngine : BaseCyclicComponent
         double chimneyTemperature = Chimney.GetTemperature();
         double outputTemperature = Chimney.GetOutputTemp();
         double accumulator2BottomSensor = Accumulator2?.BottomSensor?.GetTemperature() ?? 0;
+        double minPumpSpeed = (double)MinPumpSpeed / 100.0;
 
-        if (chimneyTemperature < Chimney.MinTemperatureToStartPump
+        if (chimneyTemperature < Chimney.MinTemperaturePumpThresold
             || accumulator2BottomSensor + 5 > chimneyTemperature)
         {
             Chimney.SetPumpSpeed(0);
@@ -184,11 +208,15 @@ public class RegulationEngine : BaseCyclicComponent
             if (Chimney.State is ChimneyState.HeatingDown)
             {
                 Chimney.SetPumpSpeed(1);
-                _logger?.Log(LogSeverity.Information, $"Pump is set to 100% because chimney temperature is eating down");
+                _logger?.Log(LogSeverity.Information, $"Pump is set to 100% because chimney temperature is heating down");
             }
-            else if (Chimney.State is ChimneyState.HeatingUp | Chimney.State is ChimneyState.Stabilized)
+            else if (Chimney.State is ChimneyState.HeatingUp || Chimney.State is ChimneyState.Stabilized)
             {
-                double pumpSpeed = (double)(chimneyTemperature - Chimney.MinTemperatureToStartPump) / (Chimney.MaxTemperature - Chimney.MinTemperatureToStartPump);
+                double pumpSpeed = minPumpSpeed +
+                    ((chimneyTemperature - Chimney.MinTemperaturePumpThresold) /
+                    (Chimney.MaxTemperaturePumpThresold - Chimney.MinTemperaturePumpThresold)
+                    * (1 - minPumpSpeed));
+
                 Chimney.SetPumpSpeed(pumpSpeed);
                 _logger?.Log(LogSeverity.Information, $"Pump is set to {pumpSpeed * 100}% because chimney temperature is heating up or stabilized");
             }
@@ -221,17 +249,4 @@ public class RegulationEngine : BaseCyclicComponent
             Valve.Execute();
         }
     }
-
-    /// <inheritdoc/>
-    protected override void OnExecute(CancellationToken cancellationToken)
-    {
-        if (!CanExecute) return;
-        ChimneyModulation();
-        ValveManagment();
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RegulationEngine"/> class.
-    /// </summary>
-    public RegulationEngine() => Period = TimeSpan.FromSeconds(3);
 }
